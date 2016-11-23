@@ -176,7 +176,6 @@ public abstract class WallPlate extends Plate {
     int wallPlateWidth  = 30;   //囲みタイルの上の部分の幅
     int wallPlateHeight = 30;   //囲みタイルの上の部分の高さ
     int wallPlateHeightBottom = 30;
-    public abstract void setPlateInDebugmode();
     void removePlate(Plate plate) {
         loopOpes.remove(plate);
     }
@@ -355,40 +354,47 @@ class StatementPlate extends Plate {
     }
     void execute(){//実行部はここに追加する
         String comboboxItem = comboBox.getItem();
-        try{
-            if(comboboxItem.equals("rect")){
-                int[] arg = getArg(textFields.size());
-                rect(arg[0],arg[1],arg[2],arg[3]);
-            }else if(comboboxItem.equals("ellipse")){
-                int[] arg = getArg(textFields.size());
-                ellipse(arg[0], arg[1], arg[2], arg[3]);
-            }else if(comboboxItem.equals("fill")){
-                int[] arg = getArg(textFields.size());
-                fill(arg[0], arg[1], arg[2]);
-            }else if(comboboxItem.equals("noStroke")){
-                noStroke();
-            }else if(comboboxItem.equals("stroke")){
-                int[] arg = getArg(textFields.size());
-                stroke(arg[0], arg[1], arg[2]);
-            }else if(comboboxItem.equals("background")){
-                int[] arg = getArg(textFields.size());
-                background(arg[0], arg[1], arg[2]);
-            }else if(comboboxItem.equals("println")){
-                int[] arg = getArg(textFields.size());
-                println(arg[0]);
-            }else if(comboboxItem.equals("text")){
-                String text = getStringValue(textFields.get(0).getText());
-                int[] arg = getArg(1,2);
-                text(text, arg[0], arg[1]);
-            }else if(comboboxItem.equals("textSize")){
-                int[] arg = getArg(textFields.size());
-                textSize(arg[0]);
-            }else if(comboboxItem.equals("line")){
-                int[] arg = getArg(textFields.size());
-                line(arg[0], arg[1], arg[2], arg[3]);
+        if(isDebugMode&& step == counter){
+            hasExecuteEnd = true;
+            executingPlate = this;
+        }
+        if(!isDebugMode ||(isDebugMode && step <= counter)){
+            try{
+                if(comboboxItem.equals("rect")){
+                    int[] arg = getArg(textFields.size());
+                    rect(arg[0],arg[1],arg[2],arg[3]);
+                }else if(comboboxItem.equals("ellipse")){
+                    int[] arg = getArg(textFields.size());
+                    ellipse(arg[0], arg[1], arg[2], arg[3]);
+                }else if(comboboxItem.equals("fill")){
+                    int[] arg = getArg(textFields.size());
+                    fill(arg[0], arg[1], arg[2]);
+                }else if(comboboxItem.equals("noStroke")){
+                    noStroke();
+                }else if(comboboxItem.equals("stroke")){
+                    int[] arg = getArg(textFields.size());
+                    stroke(arg[0], arg[1], arg[2]);
+                }else if(comboboxItem.equals("background")){
+                    int[] arg = getArg(textFields.size());
+                    background(arg[0], arg[1], arg[2]);
+                }else if(comboboxItem.equals("println")){
+                    int[] arg = getArg(textFields.size());
+                    println(arg[0]);
+                }else if(comboboxItem.equals("text")){
+                    String text = getStringValue(textFields.get(0).getText());
+                    int[] arg = getArg(1,2);
+                    text(text, arg[0], arg[1]);
+                }else if(comboboxItem.equals("textSize")){
+                    int[] arg = getArg(textFields.size());
+                    textSize(arg[0]);
+                }else if(comboboxItem.equals("line")){
+                    int[] arg = getArg(textFields.size());
+                    line(arg[0], arg[1], arg[2], arg[3]);
+                }
+            }catch(ArrayIndexOutOfBoundsException ex){
+                println(ex.toString());
             }
-        }catch(ArrayIndexOutOfBoundsException ex){
-            println(ex.toString());
+            step++;
         }
     }
     private void setTextField(int count, Integer[] typeKind) {
@@ -581,29 +587,36 @@ class AssignmentPlate extends Plate {
         String name     = variableNameTxf.getText();
         String content  = valueTxf.getText();
         Variable v      = variableTable.searchName(name);
-        if(v == null){
-            if(type == Enum.INT){
-                int value = getValue(content, valueTxf);
-                content = "" + value;
-                variableTable.addVariable(new Variable(type, name, value, content));
-            }else if(type == Enum.STRING){
-                String value = getStringValue(content);
-                content = value;
-                variableTable.addVariable(new Variable(type, name, value, content));
+        if(isDebugMode&& step == counter){
+            hasExecuteEnd = true;
+            executingPlate = this;
+        }
+        if(!isDebugMode ||(isDebugMode && step <= counter)){
+            if(v == null){
+                if(type == Enum.INT){
+                    int value = getValue(content, valueTxf);
+                    content = "" + value;
+                    variableTable.addVariable(new Variable(type, name, value, content));
+                }else if(type == Enum.STRING){
+                    String value = getStringValue(content);
+                    content = value;
+                    variableTable.addVariable(new Variable(type, name, value, content));
+                }else{
+                    new Exception("erro occurs in AssingPlate execute():型情報がありません => " + type);
+                }
             }else{
-                new Exception("erro occurs in AssingPlate execute():型情報がありません => " + type);
+                if(v.kind != type) new Exception(); //すでに定義されているエラーを出さないといけない。修正しろよ。
+                if(type == Enum.INT){
+                    int value = getValue(content, valueTxf);
+                    content = "" + value;
+                    variableTable.updateVariable(name, content);
+                }else if(type == Enum.STRING){
+                    String value = getStringValue(content);
+                    content = value;
+                    variableTable.updateVariable(name, content);
+                }
             }
-        }else{
-            if(v.kind != type) new Exception(); //すでに定義されているエラーを出さないといけない。修正しろよ。
-            if(type == Enum.INT){
-                int value = getValue(content, valueTxf);
-                content = "" + value;
-                variableTable.updateVariable(name, content);
-            }else if(type == Enum.STRING){
-                String value = getStringValue(content);
-                content = value;
-                variableTable.updateVariable(name, content);
-            }
+            step++;
         }
     }
     void draw(){
@@ -693,6 +706,7 @@ class AssignmentPlate extends Plate {
         }
     }
 }
+//ForPlateにとってかわられたクラス
 class Loop extends WallPlate {
     MyTextField txf;
     Loop(int x, int y) {
@@ -819,10 +833,11 @@ class Loop extends WallPlate {
         this.txf.setText(x);
     }
 }
+
 class ForPlate extends WallPlate{
-    Plate firstPlate;
-    Plate lastPlate;
-    ConditionPlate cond;
+    private Plate firstPlate;
+    private Plate lastPlate;
+    private ConditionPlate cond;
     ForPlate(int x, int y){
         this.x = x;
         this.y = y;
@@ -903,6 +918,7 @@ class ForPlate extends WallPlate{
             if(!loopOpes.isEmpty()){
                 Plate p = loopOpes.get(0);
                 do{
+                    if(hasExecuteEnd)   return;
                     p.execute();
                     p = p.nextPlate;
                 }while(p != null);
@@ -924,9 +940,17 @@ class ForPlate extends WallPlate{
         result.append(getIndent() + "}\n");
 		return result.toString();
     }
-    void setPlateInDebugmode(){
 
-    }
+    private boolean isFirstDebug = true;
+    private int condCount = 0;
+    private boolean isCondDebug = false;
+    private boolean isLastDebug = false;
+    // Plate getNextPlateInDebugmode(){
+    //     if(isFirstDebug){
+    //         isFirstDebug = false;
+    //         return firstPlate;
+    //     }else if()
+    // }
 }
 
 String deleteLastChar(String word){
@@ -1089,12 +1113,16 @@ class SetupPlate extends WallPlate {
         fillColor = alizarin;
     }
     void execute(){
-        if(!loopOpes.isEmpty()){
-            Plate p = loopOpes.get(0);
-            do{
-                p.execute();
-                p = p.nextPlate;
-            }while(p != null);
+        if(counter == -1) executingPlate = this;
+        else{
+            if(!loopOpes.isEmpty()){
+                Plate p = loopOpes.get(0);
+                do{
+                    if(hasExecuteEnd) return;
+                    p.execute();
+                    p = p.nextPlate;
+                }while(p != null);
+            }
         }
     }
     void draw(){
@@ -1221,6 +1249,7 @@ class MethodPlate extends WallPlate {
         if(!loopOpes.isEmpty()){
             Plate p = loopOpes.get(0);
             do{
+                if(hasExecuteEnd) return;
                 p.execute();
                 p = p.nextPlate;
             }while(p != null);
@@ -1456,27 +1485,36 @@ class ConditionPlate extends Plate {
     }
     String leftVal;
     void execute(){
-        int left  = getValue(txf1.getText(), txf1);
-        int right = getValue(txf2.getText(), txf2);
-        String relOpe = comboBox.getItem();
-        if(relOpe.equals("<")){
-            state = (left < right) ? Enum.TRUE : Enum.FALSE;
-        }else if(relOpe.equals("<=")){
-            state = (left <= right) ? Enum.TRUE : Enum.FALSE;
-        }else if(relOpe.equals(">")){
-            state = (left > right) ? Enum.TRUE : Enum.FALSE;
-        }else if(relOpe.equals(">=")){
-            state = (left >= right) ? Enum.TRUE : Enum.FALSE;
-        }else if(relOpe.equals("==")){
-            state = (left == right) ? Enum.TRUE : Enum.FALSE;
-        }else if(relOpe.equals("!=")){
-            state = (left <= right) ? Enum.TRUE : Enum.FALSE;
-        }else if(relOpe.equals("boolean")){
-            state = Enum.FALSE;    //TODO:うめる
+        if(isDebugMode&& step == counter){
+            hasExecuteEnd = true;
+            executingPlate = this;
         }
+        if(!isDebugMode ||(isDebugMode && step <= counter)){
+            int left  = getValue(txf1.getText(), txf1);
+            int right = getValue(txf2.getText(), txf2);
+            String relOpe = comboBox.getItem();
+            if(relOpe.equals("<")){
+                state = (left < right) ? Enum.TRUE : Enum.FALSE;
+            }else if(relOpe.equals("<=")){
+                state = (left <= right) ? Enum.TRUE : Enum.FALSE;
+            }else if(relOpe.equals(">")){
+                state = (left > right) ? Enum.TRUE : Enum.FALSE;
+            }else if(relOpe.equals(">=")){
+                state = (left >= right) ? Enum.TRUE : Enum.FALSE;
+            }else if(relOpe.equals("==")){
+                state = (left == right) ? Enum.TRUE : Enum.FALSE;
+            }else if(relOpe.equals("!=")){
+                state = (left <= right) ? Enum.TRUE : Enum.FALSE;
+            }else if(relOpe.equals("boolean")){
+                state = Enum.FALSE;    //TODO:うめる
+            }
+            step++;
+        }
+
     }
     void draw() {
         noStroke();
+        if(executingPlate == this) setBorder();
         if(state == -1){
             fill(#E0E4CC);
         }else if(state == Enum.FALSE){   //false
@@ -1589,6 +1627,7 @@ class IfCondPlate extends WallPlate {
     }
     void execute(){
         if(cond.getCondition() && !loopOpes.isEmpty()){
+            if(hasExecuteEnd) return;
             Plate p = loopOpes.get(0);
             do{
                 p.execute();
@@ -1832,25 +1871,33 @@ class ArrayPlate_Original extends  ArrayPlate {
     void drawTransparent(){
     }
     void execute(){
-        String name     = nameTxf.getText();
-        String content  = lengthTxf.getText();
-        Variable v      = variableTable.searchName(name);
-        int type        = getType();
-        int length      = getValue(content, lengthTxf);
-        if(v == null){
-            if(type == Enum.INT_ARRAY){
-                variableTable.addVariable(new CompositeVariable(type, name, length, 0));
-            }else if(type == Enum.STRING_ARRAY){
-                variableTable.addVariable(new CompositeVariable(type, name, length, ""));
-            }else if(type == Enum.BOOLEAN_ARRAY){
-                variableTable.addVariable(new CompositeVariable(type, name, length, true));
-            }else{
-                new Exception();
-            }
-        }else{
-            if(v.kind != type) new Exception(); //すでに定義されているエラーを出さないといけない。修正しろよ。
-            ((CompositeVariable)variableTable.searchName(name)).initArray(length);
+        if(isDebugMode&& step == counter){
+            hasExecuteEnd = true;
+            executingPlate = this;
         }
+        if(!isDebugMode ||(isDebugMode && step <= counter)){
+            String name     = nameTxf.getText();
+            String content  = lengthTxf.getText();
+            Variable v      = variableTable.searchName(name);
+            int type        = getType();
+            int length      = getValue(content, lengthTxf);
+            if(v == null){
+                if(type == Enum.INT_ARRAY){
+                    variableTable.addVariable(new CompositeVariable(type, name, length, 0));
+                }else if(type == Enum.STRING_ARRAY){
+                    variableTable.addVariable(new CompositeVariable(type, name, length, ""));
+                }else if(type == Enum.BOOLEAN_ARRAY){
+                    variableTable.addVariable(new CompositeVariable(type, name, length, true));
+                }else{
+                    new Exception();
+                }
+            }else{
+                if(v.kind != type) new Exception(); //すでに定義されているエラーを出さないといけない。修正しろよ。
+                ((CompositeVariable)variableTable.searchName(name)).initArray(length);
+            }
+            step++;
+        }
+
     }
     void drawGUI(){
         final int MARGIN_Y = pHeight/2;
@@ -1965,49 +2012,57 @@ class ArrayPlate_SyntaxSugar extends ArrayPlate {
     void drawTransparent(){
     }
     void execute(){
-        String name     = nameTxf.getText();
-        Variable v      = variableTable.searchName(name);
-        int type        = getType();
-        if(v == null){
-            if(type == Enum.INT_ARRAY){
-                ArrayList<Integer> contents = new ArrayList<Integer>();
-                for(int i = 0; i < elements.size(); i++){
-                    contents.add(getValue(elements.get(i).getText(), elements.get(i)));
-                }
-                variableTable.addVariable(new CompositeVariable(type, name, contents));
-            }else if(type == Enum.STRING_ARRAY){
-                ArrayList<String> contents = new ArrayList<String>();
-                for(int i = 0; i < elements.size(); i++){
-                    contents.add(getStringValue(elements.get(i).getText()));
-                }
-                variableTable.addVariable(new CompositeVariable(type, name, contents));
-            }else if(type == Enum.BOOLEAN_ARRAY){
-                new Exception("未実装");
-                // variableTable.addVariable(new CompositeVariable(type, name, length, true));
-            }else{
-                new Exception();
-            }
-        }else{
-            if(v.kind != type) new Exception(); //すでに定義されているエラーを出さないといけない。修正しろよ。
-            if(type == Enum.INT_ARRAY){
-                ArrayList<Integer> contents = new ArrayList<Integer>();
-                for(int i = 0; i < elements.size(); i++){
-                    contents.add(getValue(elements.get(i).getText(), elements.get(i)));
-                }
-                ((CompositeVariable)v).setElements(contents);
-            }else if(type == Enum.STRING_ARRAY){
-                ArrayList<String> contents = new ArrayList<String>();
-                for(int i = 0; i < elements.size(); i++){
-                    contents.add(getStringValue(elements.get(i).getText()));
-                }
-                ((CompositeVariable)v).setElements(contents);
-            }else if(type == Enum.BOOLEAN_ARRAY){
-                new Exception("未実装");
-                // variableTable.addVariable(new CompositeVariable(type, name, length, true));
-            }else{
-                new Exception();
-            }
+        if(isDebugMode&& step == counter){
+            hasExecuteEnd = true;
+            executingPlate = this;
         }
+        if(!isDebugMode ||(isDebugMode && step <= counter)){
+            String name     = nameTxf.getText();
+            Variable v      = variableTable.searchName(name);
+            int type        = getType();
+            if(v == null){
+                if(type == Enum.INT_ARRAY){
+                    ArrayList<Integer> contents = new ArrayList<Integer>();
+                    for(int i = 0; i < elements.size(); i++){
+                        contents.add(getValue(elements.get(i).getText(), elements.get(i)));
+                    }
+                    variableTable.addVariable(new CompositeVariable(type, name, contents));
+                }else if(type == Enum.STRING_ARRAY){
+                    ArrayList<String> contents = new ArrayList<String>();
+                    for(int i = 0; i < elements.size(); i++){
+                        contents.add(getStringValue(elements.get(i).getText()));
+                    }
+                    variableTable.addVariable(new CompositeVariable(type, name, contents));
+                }else if(type == Enum.BOOLEAN_ARRAY){
+                    new Exception("未実装");
+                    // variableTable.addVariable(new CompositeVariable(type, name, length, true));
+                }else{
+                    new Exception();
+                }
+            }else{
+                if(v.kind != type) new Exception(); //すでに定義されているエラーを出さないといけない。修正しろよ。
+                if(type == Enum.INT_ARRAY){
+                    ArrayList<Integer> contents = new ArrayList<Integer>();
+                    for(int i = 0; i < elements.size(); i++){
+                        contents.add(getValue(elements.get(i).getText(), elements.get(i)));
+                    }
+                    ((CompositeVariable)v).setElements(contents);
+                }else if(type == Enum.STRING_ARRAY){
+                    ArrayList<String> contents = new ArrayList<String>();
+                    for(int i = 0; i < elements.size(); i++){
+                        contents.add(getStringValue(elements.get(i).getText()));
+                    }
+                    ((CompositeVariable)v).setElements(contents);
+                }else if(type == Enum.BOOLEAN_ARRAY){
+                    new Exception("未実装");
+                    // variableTable.addVariable(new CompositeVariable(type, name, length, true));
+                }else{
+                    new Exception();
+                }
+            }
+            step++;
+        }
+
     }
     void drawGUI(){
         final int MARGIN_Y = pHeight/2;
@@ -2163,22 +2218,30 @@ class ArrayAssignPlate extends Plate {
         }
     }
     void execute(){
-        String name    = arrayPlate.nameTxf.getText();
-        int index      = getValue(indexTxf.getText(), indexTxf);
-        int type       = arrayPlate.getType();
-        String content = contentTxf.getText();
-        Variable v     = (CompositeVariable)(variableTable.searchName(name));
-        if(v.kind != type) new Exception(); //すでに定義されているエラーを出さないといけない。修正しろよ。
-        CompositeVariable array = (CompositeVariable)variableTable.searchName(name);
-        if(type == Enum.INT_ARRAY){
-            int value = getValue(content, contentTxf);
-            array.set(index, value);
-        }else if(type == Enum.STRING_ARRAY){
-            String value = getStringValue(content);
-            array.set(index, value);
-        }else{
-            new Exception("erro occurs in AssingPlate execute():型情報がありません => " + type);
+        if(isDebugMode&& step == counter){
+            hasExecuteEnd = true;
+            executingPlate = this;
         }
+        if(!isDebugMode ||(isDebugMode && step <= counter)){
+            String name    = arrayPlate.nameTxf.getText();
+            int index      = getValue(indexTxf.getText(), indexTxf);
+            int type       = arrayPlate.getType();
+            String content = contentTxf.getText();
+            Variable v     = (CompositeVariable)(variableTable.searchName(name));
+            if(v.kind != type) new Exception(); //すでに定義されているエラーを出さないといけない。修正しろよ。
+            CompositeVariable array = (CompositeVariable)variableTable.searchName(name);
+            if(type == Enum.INT_ARRAY){
+                int value = getValue(content, contentTxf);
+                array.set(index, value);
+            }else if(type == Enum.STRING_ARRAY){
+                String value = getStringValue(content);
+                array.set(index, value);
+            }else{
+                new Exception("erro occurs in AssingPlate execute():型情報がありません => " + type);
+            }
+            step++;
+        }
+
     }
     void setGUIPosition(){
         textFont(font);

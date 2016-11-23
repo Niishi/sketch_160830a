@@ -43,7 +43,7 @@ public class Lang {
         STMLIST();
         isExecutable = true;
         allPlateForDebugmode = new ArrayList<Plate>();
-        setAllExecutePlate(setupPlate);
+        // setAllExecutePlate(setupPlate);
         if(isTileConversion && isOK){
             plateList = new ArrayList<Plate>();
             statmentToPlate();

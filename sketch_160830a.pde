@@ -50,7 +50,9 @@ boolean hasError = false;
 
 boolean isSuperHackerMode = false;
 
-
+int counter = -1;
+int step = 0;
+boolean hasExecuteEnd = false;
 void setup(){
     size(1800,900);
     RESULT_WINDOW_WIDTH  = width / 2;
@@ -65,7 +67,6 @@ void setup(){
     setupPlate = new SetupPlate(initialTileArrangement[0],initialTileArrangement[0]);
     plateList.add(setupPlate);
     wallPlateList.add(setupPlate);
-    setAllExecutePlate(setupPlate);
 
     changeTileToScript();
 
@@ -116,16 +117,9 @@ void draw( ) {
     strokeWeight(2);
     variableTable.init();
     if(!hasError){
-        if(isDebugMode){
-            for(int i = 0; i <= debugIndex; i++){
-                Plate p = allPlateForDebugmode.get(i);
-                if(!p.isWallPlate){
-                    p.execute();
-                }
-            }
-        }else{
-            setupPlate.execute();
-        }
+        step = 0;
+        hasExecuteEnd = false;
+        setupPlate.execute();
     }
 
     drawEditor();
@@ -142,7 +136,6 @@ void draw( ) {
             isOK = true;
         }
         allPlateForDebugmode = new ArrayList<Plate>();
-        setAllExecutePlate(setupPlate);
         isChange = false;
     }
 }   //superhackermode
@@ -249,27 +242,18 @@ void keyPressed(KeyEvent e){
             println(selectedPlate.changePlatetoString());
         }else if(e.isControlDown() && keyCode == RIGHT){
             if(isDebugMode){
-                debugIndex++;
-                if(debugIndex == allPlateForDebugmode.size()){
-                    debugIndex = 0;
-                }
-                executingPlate = allPlateForDebugmode.get(debugIndex);
+                counter++;
                 nextStepSound.play();
             }
         }else if(e.isControlDown() && keyCode == LEFT){
             if(isDebugMode){
-                debugIndex--;
-                if(debugIndex < 0){
-                    debugIndex = 0;
-                }
-                executingPlate = allPlateForDebugmode.get(debugIndex);
+                if(counter > -1) counter--;
             }
         }
     }
     if (e.isControlDown() && e.getKeyCode() == java.awt.event.KeyEvent.VK_P){     //プログラムの実行
         new Lang(editor.getTokens()).run();
         allPlateForDebugmode = new ArrayList<Plate>();
-        setAllExecutePlate(setupPlate);
     }else if (e.isControlDown() && e.getKeyCode() == java.awt.event.KeyEvent.VK_O){     //ライブプログラミングモード
         editor.isLiveProgramming = !editor.isLiveProgramming;
     }else if (e.isControlDown() && e.getKeyCode() == java.awt.event.KeyEvent.VK_I){     //タイルプログラミングモード
@@ -280,7 +264,6 @@ void keyPressed(KeyEvent e){
         }
     }else if (e.isControlDown() && e.getKeyCode() == java.awt.event.KeyEvent.VK_Y){     //debugモードの切り替え
         isDebugMode = !isDebugMode;
-        setAllExecutePlate(setupPlate);
     }
 }
 
@@ -427,16 +410,4 @@ void deletePlate(Plate p){
     }
     plateList.remove(p);
     deletePlate(p.nextPlate);
-}
-
-void setAllExecutePlate(WallPlate wp){
-    allPlateForDebugmode.add(wp);
-    for(int i = 0; i < wp.loopOpes.size(); i++){
-        Plate p = wp.loopOpes.get(i);
-        if(p.isWallPlate){
-            ((WallPlate)(p)).setPlateInDebugmode();
-        }else{
-            allPlateForDebugmode.add(p);
-        }
-    }
 }
