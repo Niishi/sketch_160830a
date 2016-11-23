@@ -1,0 +1,10 @@
+void setup(){
+    rect(100,200,300,400);
+    for(4){
+        ellipse(10,20,30,40);
+        for(4){
+            println("");
+        }
+    }
+    ellipse(100,200,300,400);
+}

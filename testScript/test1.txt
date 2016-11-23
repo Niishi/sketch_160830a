@@ -1,0 +1,4 @@
+void setup() {
+    stroke(100, mouseX, mouseY);
+    line(300, 300, mouseX, mouseY);
+}

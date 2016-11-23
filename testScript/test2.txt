@@ -1,0 +1,5 @@
+void setup() {
+    textSize(20);
+    fill(mouseX, mouseY, 0);
+    text("Japan", 200, 200);
+}

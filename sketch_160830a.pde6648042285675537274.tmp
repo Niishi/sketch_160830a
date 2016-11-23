@@ -1,0 +1,278 @@
+import ddf.minim.*;
+
+//思いついたこと一覧
+//・コメントのタイル実装を行う
+//・変数一覧を作成しそこから視覚的表現へ用いれるようにする
+//・変数タイルの作成(変数名は選択式に)
+//・関数を定義すると自動的に新たなタイルが作られるようにする
+//・タイルの一覧表を作成する
+//・変数代入を視覚的な実行時表現であらわせるようにする(箱を作るイメージ)
+//・例外処理を実装したいよね
+//・マルチスレッドとかも実装したいよね
+//・オブジェクト指向、やりたいよね
+//・テキストとブロックの関係づけを持っておいて(Plateクラスがテキストエディタ内の情報を持っており、かつテキストの方もPlateの情報を持っているような感じ)相互連携を図りたい。編集中にコードの提案を行えたら
+//・ゴミ箱の調整
+
+import ddf.minim.*;
+Minim minim;
+AudioSample dump;
+
+
+
+ArrayList<Plate> plateList = new ArrayList<Plate>();
+ArrayList<WallPlate> wallPlateList = new ArrayList<WallPlate>();
+ArrayList<Method> methodList = new ArrayList<Method>();
+
+ArrayList<Tile> allBlocks = new ArrayList<Tile>();    //ブロックの情報を保持する場所
+
+int RESULT_WINDOW_WIDTH;
+int RESULT_WINDOW_HEIGHT;
+
+PImage redFlagIcon, greenFlagIcon, trashBoxIcon, trashBoxOpenIcon;
+MyTextEditor editor;
+PFont font;
+SetupPlate setupPlate;
+
+// 最初に一度だけ呼ばれる関数
+void setup(){
+    size(1800,900);
+    RESULT_WINDOW_WIDTH = width / 2;
+    RESULT_WINDOW_HEIGHT = height;
+    editor = new MyTextEditor(RESULT_WINDOW_WIDTH,0,RESULT_WINDOW_WIDTH,RESULT_WINDOW_HEIGHT,20);
+    initImage();
+
+    font = createFont("Ricty Diminished", 16);
+
+    setupPlate = new SetupPlate(initialTileArrangement[0],initialTileArrangement[0]);
+    plateList.add(setupPlate);
+    wallPlateList.add(setupPlate);
+
+    changeTileToScript();
+
+    minim = new Minim(this);
+    dump = minim.loadSample("dumping.mp3");
+}
+
+
+void stop() {
+    dump.close();
+  minim.stop();
+
+  super.stop();
+}
+
+int[] trashBoxPosition;
+void initImage(){
+    redFlagIcon      = loadImage("flag.png");
+    greenFlagIcon    = loadImage("green_flag.png");
+    trashBoxIcon     = loadImage("trashbox.png");
+    trashBoxOpenIcon = loadImage("trashbox_open.png");
+    trashBoxPosition = new int[2];
+    trashBoxPosition[0] = 30;
+    trashBoxPosition[1] = height-70;
+}
+
+
+int stmPos = 0;
+boolean isChange = false;
+void draw( ) {
+    background(255);
+    if(statementList != null){
+        fill(255);
+        stroke(0);
+        for(stmPos = 0; stmPos < statementList.size(); stmPos++){
+            Statement stm = statementList.get(stmPos);
+            if(stm.kind == Enum.SETUP_END){
+                break;
+            }
+            runByStatement(stm);
+        }
+        table = new NameTable(256);
+        variables = new ArrayList();
+    }
+    drawEditor();
+    drawPlate();
+    drawUI();
+
+    updateInitialTileArrangement();
+    //重さを考えるなら要検討
+    if(isTileConversion && isChange){
+        changeTileToScript();
+        if(editor.isLiveProgramming){
+            isOK = false;
+            new Lang(editor.getTokens()).run();
+            isOK = true;
+        }
+        isChange = false;
+    }
+}
+boolean isOK = true;
+
+void changeTileToScript(){
+    String s = getAllScript();
+    String[] ss = s.split("\n");
+    editor.setTexts(ss);
+}
+
+void drawEditor(){
+    editor.display();
+}
+
+void drawPlate(){
+    for(int i = 0; i < plateList.size(); i++){
+        Plate plate = plateList.get(i);
+        if(plate != null){
+            plate.draw();
+        }
+    }
+}
+
+void drawUI(){
+    if(editor.isLiveProgramming && isTileConversion){
+        image(redFlagIcon, RESULT_WINDOW_WIDTH-80, 10,30,30);
+        image(greenFlagIcon, RESULT_WINDOW_WIDTH-40, 10, 30, 30);
+    }else if(isTileConversion){
+        image(greenFlagIcon, RESULT_WINDOW_WIDTH-40, 10, 30, 30);
+    }else if(editor.isLiveProgramming){
+        image(redFlagIcon, RESULT_WINDOW_WIDTH-40, 10,30,30);
+    }
+    if(!isTrashBoxNear()){
+        image(trashBoxIcon, trashBoxPosition[0], trashBoxPosition[1], 34, 40);
+    }else{
+        image(trashBoxOpenIcon, trashBoxPosition[0], trashBoxPosition[1]-20, 39,60);
+    }
+}
+
+void updateInitialTileArrangement(){
+    if(plateList.size() > 0){
+        Plate p = plateList.get(0);
+        initialTileArrangement[0] = p.x;
+        initialTileArrangement[1] = p.y;
+    }
+}
+
+void keyPressed(KeyEvent e){
+    editor.keyPressed(e);
+    if(!editor.getFocus()){
+        if(key == 'z'){
+            String[] arg = {"100","100","300","200"};
+            plateList.add(new StatementPlate("rect", 100,100, arg));
+            isChange = true;
+        }else if(key == 'x'){
+            Loop l = new Loop(4,100,100);
+            wallPlateList.add(l);
+            plateList.add(l);
+            isChange = true;
+        }else if(key == 'y'){
+            plateList.add(new MethodPlate(100,100));
+            isChange = true;
+        }else if(key == 'w'){
+            plateList.add(new AssignmentPlate(Enum.INT,100,100,"x","0"));
+            isChange = true;
+        }
+    }
+    if (e.isControlDown() && e.getKeyCode() == java.awt.event.KeyEvent.VK_P){     //プログラムの実行
+        new Lang(editor.getTokens()).run();
+    }else if (e.isControlDown() && e.getKeyCode() == java.awt.event.KeyEvent.VK_O){     //ライブプログラミングモード
+        editor.isLiveProgramming = !editor.isLiveProgramming;
+    }else if (e.isControlDown() && e.getKeyCode() == java.awt.event.KeyEvent.VK_I){     //タイルプログラミングモード
+        isTileConversion = !isTileConversion;
+    }
+}
+
+String getAllScript(){
+    String result = "";
+    result += setupPlate.getScript();
+
+    for(int i = 0; i < plateList.size(); i++){
+        Plate plate = plateList.get(i);
+        if(setupPlate != plate && !setupPlate.loopOpes.contains(plate) && isOut(plate)){
+            result += plate.getScript();
+        }
+    }
+    return result;
+}
+boolean isOut(Plate p){
+    for(WallPlate w : wallPlateList){
+        if(w.loopOpes.contains(p)){
+            return false;
+        }
+    }
+    return true;
+}
+
+Tile selectedBlock;
+Plate selectedPlate;
+void mousePressed() {
+    editor.mousePressed();
+    for(int i = 0; i < plateList.size(); i++){
+        Plate plate = plateList.get(i);
+        if (plate.isMouseOver()) {
+            selectedPlate = plate;
+        }
+    }
+    /////////////////////////////////////////////
+    for(int i = 0; i < blocks.size(); i++){
+        Tile block = blocks.get(i);
+        if(block.isOnMouse()){
+            selectedBlock = block;
+        }
+    }
+}
+void mouseDragged(){
+    editor.mouseDragged();
+    if(selectedPlate != null){
+        selectedPlate.moveTo(mouseX-pmouseX, mouseY-pmouseY);
+    }
+    ///////////////////////////////////////////
+    if(selectedBlock != null){
+        int addX = mouseX - pmouseX;
+        int addY = mouseY - pmouseY;
+        selectedBlock.move(addX, addY);
+    }
+}
+void mouseReleased() {
+    if(selectedPlate != null){
+        //タイルの下にくっつける
+        selectedPlate.checkPlateLink();
+        for(int i = 0; i < plateList.size(); i++){
+            Plate plate = plateList.get(i);
+            if(plate != selectedPlate && plate.isPlateBelow(selectedPlate)){
+                plate.combinePlate(selectedPlate);
+                selectedPlate.goToUnderThePlate(plate);
+            }
+        }
+        //タイルの中に入れこませる
+        WallPlate nearestPlate = selectedPlate.getNearestWallPlate(wallPlateList);
+        selectedPlate.checkWallPlateLink(nearestPlate);
+        if(nearestPlate != null) {
+            if(selectedPlate.upperPlate != nearestPlate){
+                selectedPlate.combineWallPlate(nearestPlate);
+            }
+            selectedPlate.goIntoWallPlate(nearestPlate);
+        }
+        //ゴミ箱行き
+        if(isTrashBoxNear()){
+            plateList.remove(selectedPlate);
+            if(wallPlateList.indexOf(selectedPlate) != -1){
+                wallPlateList.remove(selectedPlate);
+                dump.trigger();
+            }
+        }
+        isChange = true;
+    }
+    selectedPlate = null;
+    selectedBlock = null;
+}
+void mouseWheel(MouseEvent e ){
+    editor.mouseWheel(e);
+}
+
+boolean isTrashBoxNear(){
+    int r = 100;
+    if(dist(mouseX, mouseY, trashBoxPosition[0], trashBoxPosition[1]) < r){
+        return true;
+    }else{
+        return false;
+    }
+}
