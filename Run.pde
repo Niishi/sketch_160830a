@@ -131,6 +131,9 @@ public class Lang {
             }else if(next.kind == Enum.LBRACKET){
                 next = getNextToken();
                 stmAccessArray(varName);
+            }else if(next.kind == Enum.LBRACE){
+                next = getNextToken();
+                stmCallMethod(varName);
             }
         }else if(next.kind == Enum.EOF){
             index = tokenSize;
@@ -766,6 +769,20 @@ public class Lang {
 
         statementList.add(new Statement(Enum.METHOD));
     }
+    void stmCallMethod(String methodName) throws Exception{
+        StringList varNameList = new StringList();
+        varNameList.append(methodName);
+        while(next.kind != Enum.RBRACE){
+            if(next.kind == Enum.OTHER || next.kind == Enum.NUM || next.kind == Enum.MOJIRETSU || next.kind == Enum.BOOLEAN) varNameList.append(next.word);
+            else unexpectedTokenError(next);
+            next = getNextToken();
+            if(next.kind == Enum.COMMA) next = getNextToken();
+        }
+        next = getNextToken();
+        if(next.kind != Enum.SEMI) unexpectedTokenError(next);
+        next = getNextToken();
+        statementList.add(new Statement(Enum.METHOD_CALL, varNameList.array()));
+    }
     private ArrayList<Token> stringOpes;
     String stringE() throws Exception{
         stringOpes = new ArrayList<Token>();
@@ -1091,6 +1108,14 @@ public class Lang {
                 currentTileArrangement[1] += 100;
                 wallPlate = null;
                 prePlate = null;
+            }else if(stm.kind == Enum.METHOD_CALL){
+                String methodName   = stm.argString[0];
+                String[] methodArg  = new String[stm.argString.length-1];
+                for(int j = 0; j < methodArg.length; j++){
+                    methodArg[j] = stm.argString[j+1];
+                }
+                Plate plate = new Method(currentTileArrangement[0], currentTileArrangement[1], methodName, methodArg);
+                updatePlateEnv(plate);
             }
         }
     }

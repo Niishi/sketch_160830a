@@ -32,7 +32,6 @@ public abstract class Plate {
     public String getNoIndentScript(){
         return "未定義:getNoIndentScript()";
     }
-
     public boolean isMouseOver(){
         if (x <= mouseX && mouseX <= x + pWidth && y <= mouseY && mouseY <= y + pHeight) {
             return true;
@@ -915,9 +914,11 @@ class ForPlate extends WallPlate{
     void execute(){
         firstPlate.execute();
         while(cond.getCondition()){
+            if(hasExecuteEnd)   return;
             if(!loopOpes.isEmpty()){
                 Plate p = loopOpes.get(0);
                 do{
+                    println("aaa");
                     if(hasExecuteEnd)   return;
                     p.execute();
                     p = p.nextPlate;
@@ -940,29 +941,25 @@ class ForPlate extends WallPlate{
         result.append(getIndent() + "}\n");
 		return result.toString();
     }
-
-    private boolean isFirstDebug = true;
-    private int condCount = 0;
-    private boolean isCondDebug = false;
-    private boolean isLastDebug = false;
-    // Plate getNextPlateInDebugmode(){
-    //     if(isFirstDebug){
-    //         isFirstDebug = false;
-    //         return firstPlate;
-    //     }else if()
-    // }
 }
 
 String deleteLastChar(String word){
     return word.substring(0,word.length()-1);
 }
 
+MethodPlate getMethodPlateByName(String name){
+    for(MethodPlate mp : methodPlateList){
+        if(mp.getName().equals(name)) return mp;
+    }
+    return null;
+}
 //関数呼び出しの方
 class Method extends Plate {
     MethodPlate methodPlate;
     String name;
     ArrayList<MyTextField> args = new ArrayList<MyTextField>();
     private final int MARGIN = 10;
+    Balloon balloon;
     Method(int x, int y, MethodPlate methodPlate) {
         this.x = x;
         this.y = y;
@@ -986,12 +983,26 @@ class Method extends Plate {
             args.get(i).setText(actParms.get(i));
         }
     }
+    Method(int x, int y, String name, String[] actParms){
+        this(x,y,name);
+        for(int i = 0; i < actParms.length; i++){
+            addVar();
+            args.get(i).setText(actParms[i]);
+        }
+    }
     void execute(){
         methodPlate.execute();
     }
     void draw() {
+        if(methodPlate == null){
+            methodPlate = getMethodPlateByName(name);
+            if(methodPlate == null) balloon = new Balloon("Method:" + name + "() is undefined.", x + pWidth + MARGIN, y + pHeight + MARGIN, x + pWidth/2, y + pHeight/2);
+            else balloon = null;
+        }
         noStroke();
-        fill(methodPlate.getFillColor());
+        if(methodPlate != null){
+            fill(methodPlate.getFillColor());
+        }
         rect(x, y, pWidth, pHeight, 10);
         fill(0);
         textAlign(LEFT, CENTER);
@@ -1004,6 +1015,7 @@ class Method extends Plate {
         if(isMouseOver()){
             linkPlate();
         }
+        if(balloon != null) balloon.draw();
     }
     void drawShadow() {
         noStroke();
@@ -1057,7 +1069,7 @@ class Method extends Plate {
             tmpx += arg.getWidth() + MARGIN;
             pWidth += arg.getWidth() + MARGIN;
         }
-        isChange = true;    //要修正
+
     }
     String[] getArgNames() {
         String[] names = new String[args.size()];
@@ -1113,7 +1125,7 @@ class SetupPlate extends WallPlate {
         fillColor = alizarin;
     }
     void execute(){
-        if(counter == -1) executingPlate = this;
+        if(isDebugMode && counter == -1) executingPlate = this;
         else{
             if(!loopOpes.isEmpty()){
                 Plate p = loopOpes.get(0);
@@ -1190,9 +1202,6 @@ class SetupPlate extends WallPlate {
         result.append("}\n");
         return result.toString();
     }
-    void setPlateInDebugmode(){
-
-    }
 }
 
 final int argWidth = 50;
@@ -1204,9 +1213,9 @@ class MethodPlate extends WallPlate {
     MyButton addVarButton;
     MyButton removeVarButton;
     ArrayList<MyTextField> args = new ArrayList<MyTextField>();
-    private int txfInterval = 10;
-    private int comboBoxWidth = 0;
-    private int MARGIN = 10;
+    private int txfInterval     = 10;
+    private int comboBoxWidth   = 0;
+    private int MARGIN          = 10;
     private int type;
 
     MethodPlate(int x, int y) {
@@ -1226,6 +1235,7 @@ class MethodPlate extends WallPlate {
         removeVarButton = new MyButton("-", x + 135, y+ 5, 10, 10);
         setTextFieldPosition();
         isWallPlate = true;
+        methodPlateList.add(this);
     }
     MethodPlate(String name, int x, int y) {
         this(x, y);
@@ -1450,7 +1460,8 @@ class MethodPlate extends WallPlate {
             plateList.add(new Method(x+50, y+50, this));
         }
     }
-    void setPlateInDebugmode(){
+    String getName(){
+        return methodNameTxf.getText();
     }
 }
 class ConditionPlate extends Plate {
@@ -1510,7 +1521,6 @@ class ConditionPlate extends Plate {
             }
             step++;
         }
-
     }
     void draw() {
         noStroke();
@@ -1529,6 +1539,7 @@ class ConditionPlate extends Plate {
             txf2.draw();
         }
         checkGUIChange();
+        state = -1;
     }
     void drawShadow() {
         fill(0, 0, 0, 180);
@@ -2341,5 +2352,93 @@ class VariablePlate extends Plate {
     String getScript(){
 		StringBuilder result = new StringBuilder(word + "\n");
 		return result.toString();
+    }
+}
+class DrawPlate extends WallPlate {
+    DrawPlate(int x, int y){
+        this.x = x;
+        this.y = y;
+        pWidth = 180;
+        pHeight = 60+40;
+        isWallPlate = true;
+        fillColor = alizarin;
+    }
+    void execute(){
+        if(counter == -1) executingPlate = this;
+        else{
+            if(!loopOpes.isEmpty()){
+                Plate p = loopOpes.get(0);
+                do{
+                    if(hasExecuteEnd) return;
+                    p.execute();
+                    p = p.nextPlate;
+                }while(p != null);
+            }
+        }
+    }
+    void draw(){
+        updateWidth();
+        noStroke();
+        if(executingPlate == this){
+            setBorder();
+        }
+        fill(fillColor);
+        rect(x, y, pWidth, wallPlateHeight, 10);
+        rect(x, y, wallPlateWidth, pHeight, 10);
+        rect(x, y+pHeight-wallPlateHeight, pWidth, wallPlateHeight, 10);
+        if(executingPlate == this){
+            noStroke();
+            rect(x+2, y+2, pWidth-4, wallPlateHeight-2, 10);
+            rect(x+2, y+2, wallPlateWidth-2, pHeight-4, 10);
+            rect(x+2, y+pHeight-wallPlateHeight+2, pWidth-4, wallPlateHeight-2, 10);
+        }
+        stroke(0);
+        fill(0);
+        textSize(18);
+        textFont(font);
+        textAlign(LEFT,TOP);
+        text("setup", x+10, y+5);
+    }
+    void drawShadow(){
+        noStroke();
+        fill(0, 0, 0, 180);
+        rect(x+8, y+8, pWidth, wallPlateHeight, 10);
+        rect(x+8, y+8, wallPlateWidth, pHeight, 10);
+        rect(x+8, y+8+pHeight-wallPlateHeight, pWidth, wallPlateHeight, 10);
+        draw();
+        for (Plate plate : loopOpes) {
+            plate.drawShadow();
+        }
+        if (nextPlate != null) {
+            nextPlate.drawShadow();
+        }
+    }
+    void drawTransparent(){
+    }
+    void moveTo(int addX, int addY) {
+        x += addX;
+        y += addY ; //命令文を移動
+        if (loopOpes.size() > 0) {
+            loopOpes.get(0).moveTo(addX, addY);
+        }
+        if (nextPlate != null) {
+            nextPlate.moveTo(addX, addY);
+        }
+    }
+    String getScript() {
+        StringBuilder result = new StringBuilder("void setup() {\n");
+        incrementIndent();
+        if(loopOpes.size() > 0){
+            Plate plate = this.loopOpes.get(0);
+            while(plate != null){
+                result.append(plate.getScript());
+                plate = plate.nextPlate;
+            }
+        }else{
+            result.append(getIndent() + "\n");
+        }
+        decrementIndent();
+        result.append("}\n");
+        return result.toString();
     }
 }

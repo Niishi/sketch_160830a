@@ -43,6 +43,7 @@ WallPlate executingWallPlate;
 int gradationR = 0;
 boolean isDebugMode = true;
 ArrayList<Plate> allPlateForDebugmode = new ArrayList<Plate>();
+ArrayList<MethodPlate> methodPlateList = new ArrayList<MethodPlate>();
 int debugIndex = 0;
 
 HashMap<Integer,Integer> colorDict = new HashMap<Integer,Integer>();
@@ -54,7 +55,7 @@ int counter = -1;
 int step = 0;
 boolean hasExecuteEnd = false;
 void setup(){
-    size(1800,900);
+    size(1300,700);
     RESULT_WINDOW_WIDTH  = width / 2;
     RESULT_WINDOW_HEIGHT = height;
     editor = new MyTextEditor(RESULT_WINDOW_WIDTH, 0, RESULT_WINDOW_WIDTH, RESULT_WINDOW_HEIGHT, 20);
@@ -250,10 +251,10 @@ void keyPressed(KeyEvent e){
                 if(counter > -1) counter--;
             }
         }
+
     }
     if (e.isControlDown() && e.getKeyCode() == java.awt.event.KeyEvent.VK_P){     //プログラムの実行
         new Lang(editor.getTokens()).run();
-        allPlateForDebugmode = new ArrayList<Plate>();
     }else if (e.isControlDown() && e.getKeyCode() == java.awt.event.KeyEvent.VK_O){     //ライブプログラミングモード
         editor.isLiveProgramming = !editor.isLiveProgramming;
     }else if (e.isControlDown() && e.getKeyCode() == java.awt.event.KeyEvent.VK_I){     //タイルプログラミングモード
@@ -380,7 +381,7 @@ void mouseReleased() {
     selectedBlock = null;
     selectingTime = 0;
 }
-void mouseWheel(MouseEvent e ){
+void mouseWheel(MouseEvent e){
     editor.mouseWheel(e);
 }
 void mouseClicked(MouseEvent e){
@@ -407,6 +408,7 @@ void deletePlate(Plate p){
             deletePlate(wp.loopOpes.get(0));
         }
         wallPlateList.remove(wp);
+        methodPlateList.remove(wp);
     }
     plateList.remove(p);
     deletePlate(p.nextPlate);

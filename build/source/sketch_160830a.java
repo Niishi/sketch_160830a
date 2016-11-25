@@ -63,6 +63,7 @@ WallPlate executingWallPlate;
 int gradationR = 0;
 boolean isDebugMode = true;
 ArrayList<Plate> allPlateForDebugmode = new ArrayList<Plate>();
+ArrayList<MethodPlate> methodPlateList = new ArrayList<MethodPlate>();
 int debugIndex = 0;
 
 HashMap<Integer,Integer> colorDict = new HashMap<Integer,Integer>();
@@ -270,10 +271,10 @@ public void keyPressed(KeyEvent e){
                 if(counter > -1) counter--;
             }
         }
+
     }
     if (e.isControlDown() && e.getKeyCode() == java.awt.event.KeyEvent.VK_P){     //\u30d7\u30ed\u30b0\u30e9\u30e0\u306e\u5b9f\u884c
         new Lang(editor.getTokens()).run();
-        allPlateForDebugmode = new ArrayList<Plate>();
     }else if (e.isControlDown() && e.getKeyCode() == java.awt.event.KeyEvent.VK_O){     //\u30e9\u30a4\u30d6\u30d7\u30ed\u30b0\u30e9\u30df\u30f3\u30b0\u30e2\u30fc\u30c9
         editor.isLiveProgramming = !editor.isLiveProgramming;
     }else if (e.isControlDown() && e.getKeyCode() == java.awt.event.KeyEvent.VK_I){     //\u30bf\u30a4\u30eb\u30d7\u30ed\u30b0\u30e9\u30df\u30f3\u30b0\u30e2\u30fc\u30c9
@@ -400,7 +401,7 @@ public void mouseReleased() {
     selectedBlock = null;
     selectingTime = 0;
 }
-public void mouseWheel(MouseEvent e ){
+public void mouseWheel(MouseEvent e){
     editor.mouseWheel(e);
 }
 public void mouseClicked(MouseEvent e){
@@ -427,6 +428,7 @@ public void deletePlate(Plate p){
             deletePlate(wp.loopOpes.get(0));
         }
         wallPlateList.remove(wp);
+        methodPlateList.remove(wp);
     }
     plateList.remove(p);
     deletePlate(p.nextPlate);
@@ -1485,7 +1487,7 @@ class MyTextEditor {
     MyToken[] myTokens;
 
     ArrayList<StringBuilder> texts = new ArrayList<StringBuilder>();
-    StringBuilder text = new StringBuilder();
+    private StringBuilder text = new StringBuilder();
     File file;
     boolean isTextRepresentation = true;
     boolean isAnimated           = false;
@@ -1971,14 +1973,12 @@ class MyTextEditor {
             isFadeOut = true;
         }else {
             if(key == '{'){
-                // complementChar(key);
                 text.insert(col,key);
                 col++;
                 text.insert(col,'}');
             }else if(key == '}'){
                 determineSameChar(key);
             }else if(key == '('){
-                // complementChar(key);
                 text.insert(col,key);
                 col++;
                 text.insert(col,')');
@@ -2393,8 +2393,7 @@ class MyTextEditor {
             StringBuilder text = new StringBuilder(textArray[i]);
             texts.add(text);
         }
-        //\u8981\u4ef6\u7b49
-        text = texts.get(0);
+        text = texts.get(0);    //\u8981\u691c\u8a0e
     }
 }
 // \u30d5\u30a1\u30a4\u30eb\u306b\u30b9\u30af\u30ea\u30d7\u30c8\u3092\u66f8\u304d\u51fa\u3059
@@ -2538,6 +2537,7 @@ static class Enum {
     static int BOOLEAN_ARRAY_SYNTAX_SUGAR   = 10005;
     static int ASSIGN_ARRAY                 = 10006;
     static int INDEX                        = 10007;
+    static int METHOD_CALL                  = 10008;
 
 
     static int EOF = Integer.MAX_VALUE;
@@ -2635,7 +2635,6 @@ public abstract class Plate {
     public String getNoIndentScript(){
         return "\u672a\u5b9a\u7fa9:getNoIndentScript()";
     }
-
     public boolean isMouseOver(){
         if (x <= mouseX && mouseX <= x + pWidth && y <= mouseY && mouseY <= y + pHeight) {
             return true;
@@ -3518,9 +3517,11 @@ class ForPlate extends WallPlate{
     public void execute(){
         firstPlate.execute();
         while(cond.getCondition()){
+            if(hasExecuteEnd)   return;
             if(!loopOpes.isEmpty()){
                 Plate p = loopOpes.get(0);
                 do{
+                    println("aaa");
                     if(hasExecuteEnd)   return;
                     p.execute();
                     p = p.nextPlate;
@@ -3543,29 +3544,25 @@ class ForPlate extends WallPlate{
         result.append(getIndent() + "}\n");
 		return result.toString();
     }
-
-    private boolean isFirstDebug = true;
-    private int condCount = 0;
-    private boolean isCondDebug = false;
-    private boolean isLastDebug = false;
-    // Plate getNextPlateInDebugmode(){
-    //     if(isFirstDebug){
-    //         isFirstDebug = false;
-    //         return firstPlate;
-    //     }else if()
-    // }
 }
 
 public String deleteLastChar(String word){
     return word.substring(0,word.length()-1);
 }
 
+public MethodPlate getMethodPlateByName(String name){
+    for(MethodPlate mp : methodPlateList){
+        if(mp.getName().equals(name)) return mp;
+    }
+    return null;
+}
 //\u95a2\u6570\u547c\u3073\u51fa\u3057\u306e\u65b9
 class Method extends Plate {
     MethodPlate methodPlate;
     String name;
     ArrayList<MyTextField> args = new ArrayList<MyTextField>();
     private final int MARGIN = 10;
+    Balloon balloon;
     Method(int x, int y, MethodPlate methodPlate) {
         this.x = x;
         this.y = y;
@@ -3589,12 +3586,26 @@ class Method extends Plate {
             args.get(i).setText(actParms.get(i));
         }
     }
+    Method(int x, int y, String name, String[] actParms){
+        this(x,y,name);
+        for(int i = 0; i < actParms.length; i++){
+            addVar();
+            args.get(i).setText(actParms[i]);
+        }
+    }
     public void execute(){
         methodPlate.execute();
     }
     public void draw() {
+        if(methodPlate == null){
+            methodPlate = getMethodPlateByName(name);
+            if(methodPlate == null) balloon = new Balloon("Method:" + name + "() is undefined.", x + pWidth + MARGIN, y + pHeight + MARGIN, x + pWidth/2, y + pHeight/2);
+            else balloon = null;
+        }
         noStroke();
-        fill(methodPlate.getFillColor());
+        if(methodPlate != null){
+            fill(methodPlate.getFillColor());
+        }
         rect(x, y, pWidth, pHeight, 10);
         fill(0);
         textAlign(LEFT, CENTER);
@@ -3607,6 +3618,7 @@ class Method extends Plate {
         if(isMouseOver()){
             linkPlate();
         }
+        if(balloon != null) balloon.draw();
     }
     public void drawShadow() {
         noStroke();
@@ -3660,7 +3672,7 @@ class Method extends Plate {
             tmpx += arg.getWidth() + MARGIN;
             pWidth += arg.getWidth() + MARGIN;
         }
-        isChange = true;    //\u8981\u4fee\u6b63
+
     }
     public String[] getArgNames() {
         String[] names = new String[args.size()];
@@ -3716,7 +3728,7 @@ class SetupPlate extends WallPlate {
         fillColor = alizarin;
     }
     public void execute(){
-        if(counter == -1) executingPlate = this;
+        if(isDebugMode && counter == -1) executingPlate = this;
         else{
             if(!loopOpes.isEmpty()){
                 Plate p = loopOpes.get(0);
@@ -3793,9 +3805,6 @@ class SetupPlate extends WallPlate {
         result.append("}\n");
         return result.toString();
     }
-    public void setPlateInDebugmode(){
-
-    }
 }
 
 final int argWidth = 50;
@@ -3807,9 +3816,9 @@ class MethodPlate extends WallPlate {
     MyButton addVarButton;
     MyButton removeVarButton;
     ArrayList<MyTextField> args = new ArrayList<MyTextField>();
-    private int txfInterval = 10;
-    private int comboBoxWidth = 0;
-    private int MARGIN = 10;
+    private int txfInterval     = 10;
+    private int comboBoxWidth   = 0;
+    private int MARGIN          = 10;
     private int type;
 
     MethodPlate(int x, int y) {
@@ -3829,6 +3838,7 @@ class MethodPlate extends WallPlate {
         removeVarButton = new MyButton("-", x + 135, y+ 5, 10, 10);
         setTextFieldPosition();
         isWallPlate = true;
+        methodPlateList.add(this);
     }
     MethodPlate(String name, int x, int y) {
         this(x, y);
@@ -4053,7 +4063,8 @@ class MethodPlate extends WallPlate {
             plateList.add(new Method(x+50, y+50, this));
         }
     }
-    public void setPlateInDebugmode(){
+    public String getName(){
+        return methodNameTxf.getText();
     }
 }
 class ConditionPlate extends Plate {
@@ -4113,7 +4124,6 @@ class ConditionPlate extends Plate {
             }
             step++;
         }
-
     }
     public void draw() {
         noStroke();
@@ -4132,6 +4142,7 @@ class ConditionPlate extends Plate {
             txf2.draw();
         }
         checkGUIChange();
+        state = -1;
     }
     public void drawShadow() {
         fill(0, 0, 0, 180);
@@ -4946,6 +4957,94 @@ class VariablePlate extends Plate {
 		return result.toString();
     }
 }
+class DrawPlate extends WallPlate {
+    DrawPlate(int x, int y){
+        this.x = x;
+        this.y = y;
+        pWidth = 180;
+        pHeight = 60+40;
+        isWallPlate = true;
+        fillColor = alizarin;
+    }
+    public void execute(){
+        if(counter == -1) executingPlate = this;
+        else{
+            if(!loopOpes.isEmpty()){
+                Plate p = loopOpes.get(0);
+                do{
+                    if(hasExecuteEnd) return;
+                    p.execute();
+                    p = p.nextPlate;
+                }while(p != null);
+            }
+        }
+    }
+    public void draw(){
+        updateWidth();
+        noStroke();
+        if(executingPlate == this){
+            setBorder();
+        }
+        fill(fillColor);
+        rect(x, y, pWidth, wallPlateHeight, 10);
+        rect(x, y, wallPlateWidth, pHeight, 10);
+        rect(x, y+pHeight-wallPlateHeight, pWidth, wallPlateHeight, 10);
+        if(executingPlate == this){
+            noStroke();
+            rect(x+2, y+2, pWidth-4, wallPlateHeight-2, 10);
+            rect(x+2, y+2, wallPlateWidth-2, pHeight-4, 10);
+            rect(x+2, y+pHeight-wallPlateHeight+2, pWidth-4, wallPlateHeight-2, 10);
+        }
+        stroke(0);
+        fill(0);
+        textSize(18);
+        textFont(font);
+        textAlign(LEFT,TOP);
+        text("setup", x+10, y+5);
+    }
+    public void drawShadow(){
+        noStroke();
+        fill(0, 0, 0, 180);
+        rect(x+8, y+8, pWidth, wallPlateHeight, 10);
+        rect(x+8, y+8, wallPlateWidth, pHeight, 10);
+        rect(x+8, y+8+pHeight-wallPlateHeight, pWidth, wallPlateHeight, 10);
+        draw();
+        for (Plate plate : loopOpes) {
+            plate.drawShadow();
+        }
+        if (nextPlate != null) {
+            nextPlate.drawShadow();
+        }
+    }
+    public void drawTransparent(){
+    }
+    public void moveTo(int addX, int addY) {
+        x += addX;
+        y += addY ; //\u547d\u4ee4\u6587\u3092\u79fb\u52d5
+        if (loopOpes.size() > 0) {
+            loopOpes.get(0).moveTo(addX, addY);
+        }
+        if (nextPlate != null) {
+            nextPlate.moveTo(addX, addY);
+        }
+    }
+    public String getScript() {
+        StringBuilder result = new StringBuilder("void setup() {\n");
+        incrementIndent();
+        if(loopOpes.size() > 0){
+            Plate plate = this.loopOpes.get(0);
+            while(plate != null){
+                result.append(plate.getScript());
+                plate = plate.nextPlate;
+            }
+        }else{
+            result.append(getIndent() + "\n");
+        }
+        decrementIndent();
+        result.append("}\n");
+        return result.toString();
+    }
+}
 //\u5b9f\u88c5\u3057\u305f\u95a2\u6570
 //background(color)
 //fill(color)
@@ -5079,6 +5178,9 @@ public class Lang {
             }else if(next.kind == Enum.LBRACKET){
                 next = getNextToken();
                 stmAccessArray(varName);
+            }else if(next.kind == Enum.LBRACE){
+                next = getNextToken();
+                stmCallMethod(varName);
             }
         }else if(next.kind == Enum.EOF){
             index = tokenSize;
@@ -5714,6 +5816,20 @@ public class Lang {
 
         statementList.add(new Statement(Enum.METHOD));
     }
+    public void stmCallMethod(String methodName) throws Exception{
+        StringList varNameList = new StringList();
+        varNameList.append(methodName);
+        while(next.kind != Enum.RBRACE){
+            if(next.kind == Enum.OTHER || next.kind == Enum.NUM || next.kind == Enum.MOJIRETSU || next.kind == Enum.BOOLEAN) varNameList.append(next.word);
+            else unexpectedTokenError(next);
+            next = getNextToken();
+            if(next.kind == Enum.COMMA) next = getNextToken();
+        }
+        next = getNextToken();
+        if(next.kind != Enum.SEMI) unexpectedTokenError(next);
+        next = getNextToken();
+        statementList.add(new Statement(Enum.METHOD_CALL, varNameList.array()));
+    }
     private ArrayList<Token> stringOpes;
     public String stringE() throws Exception{
         stringOpes = new ArrayList<Token>();
@@ -6039,6 +6155,14 @@ public class Lang {
                 currentTileArrangement[1] += 100;
                 wallPlate = null;
                 prePlate = null;
+            }else if(stm.kind == Enum.METHOD_CALL){
+                String methodName   = stm.argString[0];
+                String[] methodArg  = new String[stm.argString.length-1];
+                for(int j = 0; j < methodArg.length; j++){
+                    methodArg[j] = stm.argString[j+1];
+                }
+                Plate plate = new Method(currentTileArrangement[0], currentTileArrangement[1], methodName, methodArg);
+                updatePlateEnv(plate);
             }
         }
     }
@@ -6276,13 +6400,13 @@ public void shmDraw(){
         text(sb.toString(), 0,10 + textSize*j);
     }
 }
-    public void settings() {  size(1800,900); }
-    static public void main(String[] passedArgs) {
-        String[] appletArgs = new String[] { "sketch_160830a" };
-        if (passedArgs != null) {
-          PApplet.main(concat(appletArgs, passedArgs));
-        } else {
-          PApplet.main(appletArgs);
-        }
+  public void settings() {  size(1300,700); }
+  static public void main(String[] passedArgs) {
+    String[] appletArgs = new String[] { "sketch_160830a" };
+    if (passedArgs != null) {
+      PApplet.main(concat(appletArgs, passedArgs));
+    } else {
+      PApplet.main(appletArgs);
     }
+  }
 }

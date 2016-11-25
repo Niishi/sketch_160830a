@@ -46,7 +46,7 @@ class MyTextEditor {
     MyToken[] myTokens;
 
     ArrayList<StringBuilder> texts = new ArrayList<StringBuilder>();
-    StringBuilder text = new StringBuilder();
+    private StringBuilder text = new StringBuilder();
     File file;
     boolean isTextRepresentation = true;
     boolean isAnimated           = false;
@@ -532,14 +532,12 @@ class MyTextEditor {
             isFadeOut = true;
         }else {
             if(key == '{'){
-                // complementChar(key);
                 text.insert(col,key);
                 col++;
                 text.insert(col,'}');
             }else if(key == '}'){
                 determineSameChar(key);
             }else if(key == '('){
-                // complementChar(key);
                 text.insert(col,key);
                 col++;
                 text.insert(col,')');
@@ -954,8 +952,7 @@ class MyTextEditor {
             StringBuilder text = new StringBuilder(textArray[i]);
             texts.add(text);
         }
-        //要件等
-        text = texts.get(0);
+        text = texts.get(0);    //要検討
     }
 }
 // ファイルにスクリプトを書き出す
@@ -1099,6 +1096,7 @@ static class Enum {
     static int BOOLEAN_ARRAY_SYNTAX_SUGAR   = 10005;
     static int ASSIGN_ARRAY                 = 10006;
     static int INDEX                        = 10007;
+    static int METHOD_CALL                  = 10008;
 
 
     static int EOF = Integer.MAX_VALUE;
