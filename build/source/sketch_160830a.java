@@ -51,6 +51,7 @@ ArrayList<Tile> allBlocks = new ArrayList<Tile>();    //\u30d6\u30ed\u30c3\u30af
 
 int RESULT_WINDOW_WIDTH;
 int RESULT_WINDOW_HEIGHT;
+final int MAX_STEP_COUNT = 10000;
 
 PImage redFlagIcon, greenFlagIcon, trashBoxIcon, trashBoxOpenIcon;
 MyTextEditor editor;
@@ -74,6 +75,9 @@ boolean isSuperHackerMode = false;
 int counter = -1;
 int step = 0;
 boolean hasExecuteEnd = false;
+
+ArrayList<MyButton> buttonList = new ArrayList<MyButton>();
+
 public void setup(){
     
     RESULT_WINDOW_WIDTH  = width / 2;
@@ -82,6 +86,7 @@ public void setup(){
     variableTable = new VariableTable(RESULT_WINDOW_WIDTH - 300, 10);
     initImage();
     initSound();
+    initButton();
 
     font = createFont("Ricty Diminished", 16);
 
@@ -97,9 +102,6 @@ public void setup(){
     colorDict.put(Enum.BOOLEAN, 0xff69B0DD);   //#E6F1F9
 
     executingPlate = setupPlate;
-    ForPlate testFP = new ForPlate(100,100);
-    plateList.add(testFP);
-    wallPlateList.add(testFP);
 }
 
 int[] trashBoxPosition;
@@ -120,6 +122,39 @@ public void initSound(){
     putSound        = new SoundFile(this, "put_sound.mp3");
     nextStepSound   = new SoundFile(this, "next_step_sound.mp3");
     openWindowSound = new SoundFile(this, "open_window_sound.mp3");
+}
+
+MyButton statementButton, variableButton, ifButton, forButton, methodButton, arrayButton;
+
+public void initButton(){
+    int x = 30;
+    int y = 50;
+    final int BUTTON_MARGIN = 70;
+
+    statementButton = new MyButton("Statement", x,y);
+    statementButton.setColor(peterRiver, color(0xff8AC3E9), color(0xff1A5F8E));
+    buttonList.add(statementButton);
+    y += BUTTON_MARGIN;
+    variableButton = new MyButton("Variable", x, y);
+    variableButton.setColor(alizarin, color(0xffF29E96), color(0xffA72114));
+    buttonList.add(variableButton);
+    y += BUTTON_MARGIN;
+    ifButton = new MyButton("If", x, y);
+    ifButton.setColor(carrot, color(0xffEFB17A), color(0xff8D4A10));
+    buttonList.add(ifButton);
+    y += BUTTON_MARGIN;
+    forButton = new MyButton("For", x, y);
+    forButton.setColor(nephritis, color(0xff5CDA91), color(0xff13572F));
+    buttonList.add(forButton);
+    y += BUTTON_MARGIN;
+    methodButton = new MyButton("Method", x, y);
+    methodButton.setColor(color(78,205,196), color(0xff9CE2DC), color(0xff288A82));
+    buttonList.add(methodButton);
+    y += BUTTON_MARGIN;
+    arrayButton = new MyButton("Array", x, y);
+    arrayButton.setColor(amethyst, color(0xffC49FD4), color(0xff603474));
+    buttonList.add(arrayButton);
+    y += BUTTON_MARGIN;
 }
 
 int stmPos = 0;
@@ -199,6 +234,9 @@ public void drawPlate() {
 }
 
 public void drawUI(){
+    for(MyButton button : buttonList){
+        button.draw();
+    }
     for(Balloon b : balloonList){
         b.draw();
     }
@@ -229,35 +267,35 @@ public void keyPressed(KeyEvent e){
     editor.keyPressed(e);
     if(!editor.getFocus()){
         if(key == 'z'){
-            String[] arg = {"100","100","300","200"};
-            plateList.add(new StatementPlate("rect", 100,100, arg));
-            isChange = true;
+            // String[] arg = {"100","100","300","200"};
+            // plateList.add(new StatementPlate("rect", 100,100, arg));
+            // isChange = true;
         }else if(key == 'x'){
-            ForPlate l = new ForPlate(100,100);
-            wallPlateList.add(l);
-            plateList.add(l);
-            isChange = true;
+            // ForPlate l = new ForPlate(100,100);
+            // wallPlateList.add(l);
+            // plateList.add(l);
+            // isChange = true;
         }else if(key == 'y'){
-            MethodPlate mp = new MethodPlate(100,100);
-            plateList.add(mp);
-            wallPlateList.add(mp);
-            isChange = true;
+            // MethodPlate mp = new MethodPlate(100,100);
+            // plateList.add(mp);
+            // wallPlateList.add(mp);
+            // isChange = true;
         }else if(key == 'w'){
-            plateList.add(new AssignmentPlate(Enum.INT,100,100,"x","0"));
-            isChange = true;
+            // plateList.add(new AssignmentPlate(Enum.INT,100,100,"x","0"));
+            // isChange = true;
         }else if(key == 'f'){
-            IfCondPlate fp = new IfCondPlate(100,100);
-            plateList.add(fp);
-            wallPlateList.add(fp);
-            isChange = true;
+            // IfCondPlate fp = new IfCondPlate(100,100);
+            // plateList.add(fp);
+            // wallPlateList.add(fp);
+            // isChange = true;
         }else if(key == 'r'){
-            ReturnPlate rp = new ReturnPlate(100,100);
-            plateList.add(rp);
-            isChange = true;
+            // ReturnPlate rp = new ReturnPlate(100,100);
+            // plateList.add(rp);
+            // isChange = true;
         } else if(key == 't'){
-            ArrayPlate_Original ap = new ArrayPlate_Original(100,100,"a","10",Enum.INT_ARRAY);
-            plateList.add(ap);
-            isChange = true;
+            // ArrayPlate_Original ap = new ArrayPlate_Original(100,100,"a","10",Enum.INT_ARRAY);
+            // plateList.add(ap);
+            // isChange = true;
         }
         else if(key == 'a' && selectedPlate != null){
             println(selectedPlate.changePlatetoString());
@@ -337,6 +375,7 @@ public void mousePressed() {
             selectedBlock = block;
         }
     }
+    buttonAction();
 }
 public void mouseDragged(){
     editor.mouseDragged();
@@ -415,6 +454,35 @@ public boolean isTrashBoxNear(){
         return true;
     }else{
         return false;
+    }
+}
+public void buttonAction(){
+    if(statementButton.isOver) {
+        String[] arg = {"100","100","300","200"};
+        plateList.add(new StatementPlate("rect", 100,100, arg));
+        isChange = true;
+    }else if(variableButton.isOver){
+        plateList.add(new AssignmentPlate(Enum.INT,100,100,"x","0"));
+        isChange = true;
+    }else if(ifButton.isOver){
+        IfCondPlate fp = new IfCondPlate(100,100);
+        plateList.add(fp);
+        wallPlateList.add(fp);
+        isChange = true;
+    }else if(forButton.isOver){
+        ForPlate l = new ForPlate(100,100);
+        wallPlateList.add(l);
+        plateList.add(l);
+        isChange = true;
+    }else if(methodButton.isOver){
+        MethodPlate mp = new MethodPlate(100,100);
+        plateList.add(mp);
+        wallPlateList.add(mp);
+        isChange = true;
+    }else if(arrayButton.isOver){
+        ArrayPlate_Original ap = new ArrayPlate_Original(100,100,"a","10",Enum.INT_ARRAY);
+        plateList.add(ap);
+        isChange = true;
     }
 }
 //\u518d\u5e30\u3092\u7528\u3044\u3066p\u4ee5\u4e0b\u306ePlate\u3092\u3059\u3079\u3066\u524a\u9664\u3002\u30a2\u30cb\u30e1\u30fc\u30b7\u30e7\u30f3\u3092\u52a0\u3048\u305f\u3044
@@ -962,6 +1030,7 @@ class MyButton extends MyGUI {
     public void draw () {
         noStroke();
         update();
+        int c = bColor;
         if (image != null) {
             image(image, x, y, w, h);
             if(isOver){
@@ -980,11 +1049,9 @@ class MyButton extends MyGUI {
                 if(mousePressed){
                     mousePressTime = 30;
                 }
-                fill(bHighlight);
-            } else {
-                fill(bColor);
+                c = bHighlight;
             }
-            rect(x, y, w, h);
+            drawButton(c);
             if(mousePressTime > 0){
                 stroke(0);
                 strokeWeight(2);
@@ -993,8 +1060,8 @@ class MyButton extends MyGUI {
                 text(label, x + w / 2, y + h / 2+h*(1.0f/15));
             }
             else if(isOver){
-                fill(bColor);
-                rect(x, y+h- h*(1.0f/6), w, h*(1.0f/6));
+                // fill(bColor);
+                // rect(x, y+h- h*(1.0/6), w, h*(1.0/6));
                 stroke(0);
                 strokeWeight(2);
                 fill(0);
@@ -1008,6 +1075,16 @@ class MyButton extends MyGUI {
                 text(label, x + w / 2, y + h / 2);
             }
         }
+    }
+    public void drawButton(int c){
+        int a = 6;
+        int groundColor = 250;
+        for(int i = a; i > 0; i--){
+            fill(groundColor/a*i + red(c)/a*(a-i), groundColor/a*i + green(c)/a*(a-i), groundColor/a*i + blue(c)/a*(a-i));
+            rect(x-i,y-i,100+i*2,30+i*2);
+        }
+        fill(c);
+        rect(x,y,w,h);
     }
     int shadowX = 2;
     public void drawShadowSide(){
@@ -1221,6 +1298,7 @@ class MyTextField extends MyGUI {
         mono = loadFont("RictyDiminished-Regular-16.vlw");
         textFont(mono);
         charWidth = textWidth("a");
+        kind = -1;
         setText("");
         guiList.add(this);
         isTextField = true;
@@ -1241,6 +1319,7 @@ class MyTextField extends MyGUI {
         setText("");
         guiList.add(this);
         isTextField = true;
+        kind = -1;
     }
     MyTextField(String text, int x, int y, int width, int height) {
         this(x,y,width,height);
@@ -1330,8 +1409,10 @@ class MyTextField extends MyGUI {
         }else if(kind == Enum.STRING){
             isNotError = checkString();
             type = "String";
+        }else if(kind == -1){
+            isNotError = true;
         }else{
-            println("type is not defined. In MyTextField class checkType() method!!!!");
+            println("type is not defined. In MyTextField class checkType() method!!!! type is \"" + type + "\"");
         }
         if(isNotError){
             balloonList.remove(balloon);
@@ -3308,138 +3389,12 @@ class AssignmentPlate extends Plate {
         }
     }
 }
-//ForPlate\u306b\u3068\u3063\u3066\u304b\u308f\u3089\u308c\u305f\u30af\u30e9\u30b9
-class Loop extends WallPlate {
-    MyTextField txf;
-    Loop(int x, int y) {
-        this.x = x;
-        this.y = y;
-        this.txf = new MyTextField(x+loopTxfPosX, y + loopTxfPosY, 30, 20);
-        pWidth = 180;
-        pHeight = 60+40;
-        isWallPlate = true;
-        fillColor = color(179, 204, 87);
-    }
-    Loop(int count, int x, int y){
-        this(x,y);
-        this.txf = new MyTextField(""+count, x+loopTxfPosX, y + loopTxfPosY, 30, 20);
-        isWallPlate = true;
-    }
-    public void execute(){
-        int kurikaesi = getValue(txf.getText(), txf);
-        for(int i = 0; i < kurikaesi; i++){
-            if(!loopOpes.isEmpty()){
-                Plate p = loopOpes.get(0);
-                do{
-                    p.execute();
-                    p = p.nextPlate;
-                }while(p != null);
-            }
-        }
-    }
-    public void draw() {
-        updateWidth();
-        noStroke();
-        if(executingPlate == this){
-            setBorder();
-        }
-        fill(fillColor);
-        rect(x, y, pWidth, wallPlateHeight, 10);
-        rect(x, y, wallPlateWidth, pHeight, 10);
-        rect(x, y+pHeight-wallPlateHeight, pWidth, wallPlateHeight, 10);
-        if(executingPlate == this){
-            noStroke();
-            rect(x+2, y+2, pWidth-4, wallPlateHeight-2, 10);
-            rect(x+2, y+2, wallPlateWidth-2, pHeight-4, 10);
-            rect(x+2, y+pHeight-wallPlateHeight+2, pWidth-4, wallPlateHeight-2, 10);
-        }
-        stroke(0);
-        fill(0);
-        textSize(18);
-        // textFont(font);
-        textAlign(LEFT,TOP);
-        text("for", x+10, y+5);
-        txf.draw();
-        if(txf.checkChanged()){
-            isChange = true;
-        }
-    }
-    public void drawShadow() {
-        noStroke();
-        fill(0, 0, 0, 180);
-        rect(x+8, y+8, pWidth, wallPlateHeight, 10);
-        rect(x+8, y+8, wallPlateWidth, pHeight, 10);
-        rect(x+8, y+8+pHeight-wallPlateHeight, pWidth, wallPlateHeight, 10);
-        draw();
-        for (Plate plate : loopOpes) {
-            plate.drawShadow();
-        }
-        if (nextPlate != null) {
-            nextPlate.drawShadow();
-        }
-    }
-    public void drawTransparent() {
-        noStroke();
-        fill(179, 204, 87, alpha);
-        rect(x, y, pWidth, wallPlateHeight, 10);
-        rect(x, y, wallPlateWidth, pHeight, 10);
-        rect(x, y+pHeight-wallPlateHeight, pWidth, wallPlateHeight, 10);
-        stroke(0, alpha);
-        fill(0, alpha);
-        textSize(15);
-        textFont(font);
-        text("for", x+20, y+10);
-        txf.draw();
-    }
-    public void setPlateInDebugmode(){
-        iter = getValue(txf.getText(),txf);
-        for(int i = 0; i < iter; i++){
-            for(int j = 0; j < loopOpes.size(); j++){
-                allPlateForDebugmode.add(loopOpes.get(j));
-            }
-        }
-    }
-    int index = 0;
-    private int count=0;
-    private int iter = 0;
-    ArrayList<Statement> doingOpes;
-    public void setIter(int iter){
-        this.iter = iter;
-    }
-    public void moveTo(int addX, int addY) {
-        x += addX;
-        y += addY;
-        txf.moveTo(x + 50, y + 5);
-        if (loopOpes.size() > 0) {
-            loopOpes.get(0).moveTo(addX, addY);
-        }
-        if (nextPlate != null) {
-            nextPlate.moveTo(addX, addY);
-        }
-    }
-    public String getScript() {
-        StringBuilder result = new StringBuilder(getIndent());
-        result.append("for(" + txf.getText() + "){\n");
-        incrementIndent();
-        for (Plate plate : loopOpes) {
-            result.append(plate.getScript());
-        }
-        if(loopOpes.size() == 0){
-            result.append(getIndent() + "\n");
-        }
-        decrementIndent();
-        result.append(getIndent() + "}\n");
-        return result.toString();
-    }
-    public void setLoopCount(String x){
-        this.txf.setText(x);
-    }
-}
 
 class ForPlate extends WallPlate{
     private Plate firstPlate;
     private Plate lastPlate;
     private ConditionPlate cond;
+    Balloon balloon;
     ForPlate(int x, int y){
         this.x = x;
         this.y = y;
@@ -3513,21 +3468,25 @@ class ForPlate extends WallPlate{
         if (nextPlate != null) {
             nextPlate.moveTo(addX, addY);
         }
+        if(balloon != null) balloon.shiftPos(addX,addY);
     }
     public void execute(){
         firstPlate.execute();
-        while(cond.getCondition()){
+        while(cond.getCondition() && step < MAX_STEP_COUNT){
             if(hasExecuteEnd)   return;
             if(!loopOpes.isEmpty()){
                 Plate p = loopOpes.get(0);
                 do{
-                    println("aaa");
                     if(hasExecuteEnd)   return;
                     p.execute();
                     p = p.nextPlate;
                 }while(p != null);
             }
             lastPlate.execute();
+        }
+        if(step >= MAX_STEP_COUNT){
+            balloon = new Balloon("Error: step count is over " + MAX_STEP_COUNT +".", x + pWidth + MARGIN, y + wallPlateHeight+ MARGIN, x+ MARGIN, y + MARGIN);
+            hasError = true;
         }
     }
     public String getScript(){
@@ -3599,6 +3558,7 @@ class Method extends Plate {
     public void draw() {
         if(methodPlate == null){
             methodPlate = getMethodPlateByName(name);
+            balloonList.remove(balloon);
             if(methodPlate == null) balloon = new Balloon("Method:" + name + "() is undefined.", x + pWidth + MARGIN, y + pHeight + MARGIN, x + pWidth/2, y + pHeight/2);
             else balloon = null;
         }
@@ -3762,6 +3722,7 @@ class SetupPlate extends WallPlate {
         textFont(font);
         textAlign(LEFT,TOP);
         text("setup", x+10, y+5);
+
     }
     public void drawShadow(){
         noStroke();
@@ -5045,14 +5006,6 @@ class DrawPlate extends WallPlate {
         return result.toString();
     }
 }
-//\u5b9f\u88c5\u3057\u305f\u95a2\u6570
-//background(color)
-//fill(color)
-//rect()
-//ellipse()
-//println()
-
-
 ArrayList<Statement> statementList;
 int stmCount = -1;
 boolean isExecutable = false;
@@ -5896,7 +5849,11 @@ public class Lang {
     private String getStringValueByCode(){
         StringBuilder sb = new StringBuilder();
         for(Token token : stringOpes){
-            if(token.kind == Enum.MOJIRETSU || token.kind == Enum.NUM){
+            if(token.kind == Enum.MOJIRETSU){
+                String s = deleteLastChar(token.word);
+                s = s.substring(1,s.length());
+                sb.append(s);
+            }else if(token.kind == Enum.NUM){
                 sb.append(token.word);
             }else if(token.kind == Enum.OTHER){
                 sb.append(variableTable.searchName(token.word).getVarValue());
@@ -6062,11 +6019,9 @@ public class Lang {
     public int getAdress(String name) throws Exception{
         return variableTable.indexOf(name);
     }
-
     public void addCode(String st) {
         result.append(st).append("\n");
     }
-
     WallPlate wallPlate = null;
     WallPlate preWallPlate = null;
     Plate prePlate = null;
@@ -6263,9 +6218,7 @@ public class Lang {
         //\u975e\u5e38\u306b\u66f8\u304d\u65b9\u304c\u6c5a\u3044\u3002\u3042\u3068\u3067\u306a\u304a\u3059\u3002
         WallPlate wplate = null;
         int kind = stm.kind;
-        if(kind == Enum.FOR_START){
-            wplate = new Loop(currentTileArrangement[0], currentTileArrangement[1]);
-        }else if(kind == Enum.SETUP){
+        if(kind == Enum.SETUP){
             wplate = new SetupPlate(currentTileArrangement[0], currentTileArrangement[1]);
         }else if(kind == Enum.METHOD_START){
             if(stm.argString.length == 1){
@@ -6400,13 +6353,13 @@ public void shmDraw(){
         text(sb.toString(), 0,10 + textSize*j);
     }
 }
-  public void settings() {  size(1300,700); }
-  static public void main(String[] passedArgs) {
-    String[] appletArgs = new String[] { "sketch_160830a" };
-    if (passedArgs != null) {
-      PApplet.main(concat(appletArgs, passedArgs));
-    } else {
-      PApplet.main(appletArgs);
+    public void settings() {  size(1800,900); }
+    static public void main(String[] passedArgs) {
+        String[] appletArgs = new String[] { "sketch_160830a" };
+        if (passedArgs != null) {
+          PApplet.main(concat(appletArgs, passedArgs));
+        } else {
+          PApplet.main(appletArgs);
+        }
     }
-  }
 }

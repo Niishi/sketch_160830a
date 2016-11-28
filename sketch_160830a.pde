@@ -31,6 +31,7 @@ ArrayList<Tile> allBlocks = new ArrayList<Tile>();    //ブロックの情報を
 
 int RESULT_WINDOW_WIDTH;
 int RESULT_WINDOW_HEIGHT;
+final int MAX_STEP_COUNT = 10000;
 
 PImage redFlagIcon, greenFlagIcon, trashBoxIcon, trashBoxOpenIcon;
 MyTextEditor editor;
@@ -54,14 +55,18 @@ boolean isSuperHackerMode = false;
 int counter = -1;
 int step = 0;
 boolean hasExecuteEnd = false;
+
+ArrayList<MyButton> buttonList = new ArrayList<MyButton>();
+
 void setup(){
-    size(1300,700);
+    size(1800,900);
     RESULT_WINDOW_WIDTH  = width / 2;
     RESULT_WINDOW_HEIGHT = height;
     editor = new MyTextEditor(RESULT_WINDOW_WIDTH, 0, RESULT_WINDOW_WIDTH, RESULT_WINDOW_HEIGHT, 20);
     variableTable = new VariableTable(RESULT_WINDOW_WIDTH - 300, 10);
     initImage();
     initSound();
+    initButton();
 
     font = createFont("Ricty Diminished", 16);
 
@@ -77,9 +82,6 @@ void setup(){
     colorDict.put(Enum.BOOLEAN, #69B0DD);   //#E6F1F9
 
     executingPlate = setupPlate;
-    ForPlate testFP = new ForPlate(100,100);
-    plateList.add(testFP);
-    wallPlateList.add(testFP);
 }
 
 int[] trashBoxPosition;
@@ -100,6 +102,39 @@ void initSound(){
     putSound        = new SoundFile(this, "put_sound.mp3");
     nextStepSound   = new SoundFile(this, "next_step_sound.mp3");
     openWindowSound = new SoundFile(this, "open_window_sound.mp3");
+}
+
+MyButton statementButton, variableButton, ifButton, forButton, methodButton, arrayButton;
+
+void initButton(){
+    int x = 30;
+    int y = 50;
+    final int BUTTON_MARGIN = 70;
+
+    statementButton = new MyButton("Statement", x,y);
+    statementButton.setColor(peterRiver, color(#8AC3E9), color(#1A5F8E));
+    buttonList.add(statementButton);
+    y += BUTTON_MARGIN;
+    variableButton = new MyButton("Variable", x, y);
+    variableButton.setColor(alizarin, color(#F29E96), color(#A72114));
+    buttonList.add(variableButton);
+    y += BUTTON_MARGIN;
+    ifButton = new MyButton("If", x, y);
+    ifButton.setColor(carrot, color(#EFB17A), color(#8D4A10));
+    buttonList.add(ifButton);
+    y += BUTTON_MARGIN;
+    forButton = new MyButton("For", x, y);
+    forButton.setColor(nephritis, color(#5CDA91), color(#13572F));
+    buttonList.add(forButton);
+    y += BUTTON_MARGIN;
+    methodButton = new MyButton("Method", x, y);
+    methodButton.setColor(color(78,205,196), color(#9CE2DC), color(#288A82));
+    buttonList.add(methodButton);
+    y += BUTTON_MARGIN;
+    arrayButton = new MyButton("Array", x, y);
+    arrayButton.setColor(amethyst, color(#C49FD4), color(#603474));
+    buttonList.add(arrayButton);
+    y += BUTTON_MARGIN;
 }
 
 int stmPos = 0;
@@ -179,6 +214,9 @@ void drawPlate() {
 }
 
 void drawUI(){
+    for(MyButton button : buttonList){
+        button.draw();
+    }
     for(Balloon b : balloonList){
         b.draw();
     }
@@ -209,35 +247,35 @@ void keyPressed(KeyEvent e){
     editor.keyPressed(e);
     if(!editor.getFocus()){
         if(key == 'z'){
-            String[] arg = {"100","100","300","200"};
-            plateList.add(new StatementPlate("rect", 100,100, arg));
-            isChange = true;
+            // String[] arg = {"100","100","300","200"};
+            // plateList.add(new StatementPlate("rect", 100,100, arg));
+            // isChange = true;
         }else if(key == 'x'){
-            ForPlate l = new ForPlate(100,100);
-            wallPlateList.add(l);
-            plateList.add(l);
-            isChange = true;
+            // ForPlate l = new ForPlate(100,100);
+            // wallPlateList.add(l);
+            // plateList.add(l);
+            // isChange = true;
         }else if(key == 'y'){
-            MethodPlate mp = new MethodPlate(100,100);
-            plateList.add(mp);
-            wallPlateList.add(mp);
-            isChange = true;
+            // MethodPlate mp = new MethodPlate(100,100);
+            // plateList.add(mp);
+            // wallPlateList.add(mp);
+            // isChange = true;
         }else if(key == 'w'){
-            plateList.add(new AssignmentPlate(Enum.INT,100,100,"x","0"));
-            isChange = true;
+            // plateList.add(new AssignmentPlate(Enum.INT,100,100,"x","0"));
+            // isChange = true;
         }else if(key == 'f'){
-            IfCondPlate fp = new IfCondPlate(100,100);
-            plateList.add(fp);
-            wallPlateList.add(fp);
-            isChange = true;
+            // IfCondPlate fp = new IfCondPlate(100,100);
+            // plateList.add(fp);
+            // wallPlateList.add(fp);
+            // isChange = true;
         }else if(key == 'r'){
-            ReturnPlate rp = new ReturnPlate(100,100);
-            plateList.add(rp);
-            isChange = true;
+            // ReturnPlate rp = new ReturnPlate(100,100);
+            // plateList.add(rp);
+            // isChange = true;
         } else if(key == 't'){
-            ArrayPlate_Original ap = new ArrayPlate_Original(100,100,"a","10",Enum.INT_ARRAY);
-            plateList.add(ap);
-            isChange = true;
+            // ArrayPlate_Original ap = new ArrayPlate_Original(100,100,"a","10",Enum.INT_ARRAY);
+            // plateList.add(ap);
+            // isChange = true;
         }
         else if(key == 'a' && selectedPlate != null){
             println(selectedPlate.changePlatetoString());
@@ -317,6 +355,7 @@ void mousePressed() {
             selectedBlock = block;
         }
     }
+    buttonAction();
 }
 void mouseDragged(){
     editor.mouseDragged();
@@ -395,6 +434,35 @@ boolean isTrashBoxNear(){
         return true;
     }else{
         return false;
+    }
+}
+void buttonAction(){
+    if(statementButton.isOver) {
+        String[] arg = {"100","100","300","200"};
+        plateList.add(new StatementPlate("rect", 100,100, arg));
+        isChange = true;
+    }else if(variableButton.isOver){
+        plateList.add(new AssignmentPlate(Enum.INT,100,100,"x","0"));
+        isChange = true;
+    }else if(ifButton.isOver){
+        IfCondPlate fp = new IfCondPlate(100,100);
+        plateList.add(fp);
+        wallPlateList.add(fp);
+        isChange = true;
+    }else if(forButton.isOver){
+        ForPlate l = new ForPlate(100,100);
+        wallPlateList.add(l);
+        plateList.add(l);
+        isChange = true;
+    }else if(methodButton.isOver){
+        MethodPlate mp = new MethodPlate(100,100);
+        plateList.add(mp);
+        wallPlateList.add(mp);
+        isChange = true;
+    }else if(arrayButton.isOver){
+        ArrayPlate_Original ap = new ArrayPlate_Original(100,100,"a","10",Enum.INT_ARRAY);
+        plateList.add(ap);
+        isChange = true;
     }
 }
 //再帰を用いてp以下のPlateをすべて削除。アニメーションを加えたい

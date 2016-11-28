@@ -48,6 +48,7 @@ class MyButton extends MyGUI {
     void draw () {
         noStroke();
         update();
+        color c = bColor;
         if (image != null) {
             image(image, x, y, w, h);
             if(isOver){
@@ -66,11 +67,9 @@ class MyButton extends MyGUI {
                 if(mousePressed){
                     mousePressTime = 30;
                 }
-                fill(bHighlight);
-            } else {
-                fill(bColor);
+                c = bHighlight;
             }
-            rect(x, y, w, h);
+            drawButton(c);
             if(mousePressTime > 0){
                 stroke(0);
                 strokeWeight(2);
@@ -79,8 +78,8 @@ class MyButton extends MyGUI {
                 text(label, x + w / 2, y + h / 2+h*(1.0/15));
             }
             else if(isOver){
-                fill(bColor);
-                rect(x, y+h- h*(1.0/6), w, h*(1.0/6));
+                // fill(bColor);
+                // rect(x, y+h- h*(1.0/6), w, h*(1.0/6));
                 stroke(0);
                 strokeWeight(2);
                 fill(0);
@@ -94,6 +93,16 @@ class MyButton extends MyGUI {
                 text(label, x + w / 2, y + h / 2);
             }
         }
+    }
+    void drawButton(color c){
+        int a = 6;
+        int groundColor = 250;
+        for(int i = a; i > 0; i--){
+            fill(groundColor/a*i + red(c)/a*(a-i), groundColor/a*i + green(c)/a*(a-i), groundColor/a*i + blue(c)/a*(a-i));
+            rect(x-i,y-i,100+i*2,30+i*2);
+        }
+        fill(c);
+        rect(x,y,w,h);
     }
     int shadowX = 2;
     void drawShadowSide(){
@@ -307,6 +316,7 @@ class MyTextField extends MyGUI {
         mono = loadFont("RictyDiminished-Regular-16.vlw");
         textFont(mono);
         charWidth = textWidth("a");
+        kind = -1;
         setText("");
         guiList.add(this);
         isTextField = true;
@@ -327,6 +337,7 @@ class MyTextField extends MyGUI {
         setText("");
         guiList.add(this);
         isTextField = true;
+        kind = -1;
     }
     MyTextField(String text, int x, int y, int width, int height) {
         this(x,y,width,height);
@@ -416,8 +427,10 @@ class MyTextField extends MyGUI {
         }else if(kind == Enum.STRING){
             isNotError = checkString();
             type = "String";
+        }else if(kind == -1){
+            isNotError = true;
         }else{
-            println("type is not defined. In MyTextField class checkType() method!!!!");
+            println("type is not defined. In MyTextField class checkType() method!!!! type is \"" + type + "\"");
         }
         if(isNotError){
             balloonList.remove(balloon);

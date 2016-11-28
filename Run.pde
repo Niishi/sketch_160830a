@@ -1,11 +1,3 @@
-//実装した関数
-//background(color)
-//fill(color)
-//rect()
-//ellipse()
-//println()
-
-
 ArrayList<Statement> statementList;
 int stmCount = -1;
 boolean isExecutable = false;
@@ -849,7 +841,11 @@ public class Lang {
     private String getStringValueByCode(){
         StringBuilder sb = new StringBuilder();
         for(Token token : stringOpes){
-            if(token.kind == Enum.MOJIRETSU || token.kind == Enum.NUM){
+            if(token.kind == Enum.MOJIRETSU){
+                String s = deleteLastChar(token.word);
+                s = s.substring(1,s.length());
+                sb.append(s);
+            }else if(token.kind == Enum.NUM){
                 sb.append(token.word);
             }else if(token.kind == Enum.OTHER){
                 sb.append(variableTable.searchName(token.word).getVarValue());
@@ -1015,11 +1011,9 @@ public class Lang {
     int getAdress(String name) throws Exception{
         return variableTable.indexOf(name);
     }
-
     void addCode(String st) {
         result.append(st).append("\n");
     }
-
     WallPlate wallPlate = null;
     WallPlate preWallPlate = null;
     Plate prePlate = null;
@@ -1216,9 +1210,7 @@ public class Lang {
         //非常に書き方が汚い。あとでなおす。
         WallPlate wplate = null;
         int kind = stm.kind;
-        if(kind == Enum.FOR_START){
-            wplate = new Loop(currentTileArrangement[0], currentTileArrangement[1]);
-        }else if(kind == Enum.SETUP){
+        if(kind == Enum.SETUP){
             wplate = new SetupPlate(currentTileArrangement[0], currentTileArrangement[1]);
         }else if(kind == Enum.METHOD_START){
             if(stm.argString.length == 1){

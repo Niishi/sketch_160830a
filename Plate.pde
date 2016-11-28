@@ -705,138 +705,12 @@ class AssignmentPlate extends Plate {
         }
     }
 }
-//ForPlateにとってかわられたクラス
-class Loop extends WallPlate {
-    MyTextField txf;
-    Loop(int x, int y) {
-        this.x = x;
-        this.y = y;
-        this.txf = new MyTextField(x+loopTxfPosX, y + loopTxfPosY, 30, 20);
-        pWidth = 180;
-        pHeight = 60+40;
-        isWallPlate = true;
-        fillColor = color(179, 204, 87);
-    }
-    Loop(int count, int x, int y){
-        this(x,y);
-        this.txf = new MyTextField(""+count, x+loopTxfPosX, y + loopTxfPosY, 30, 20);
-        isWallPlate = true;
-    }
-    void execute(){
-        int kurikaesi = getValue(txf.getText(), txf);
-        for(int i = 0; i < kurikaesi; i++){
-            if(!loopOpes.isEmpty()){
-                Plate p = loopOpes.get(0);
-                do{
-                    p.execute();
-                    p = p.nextPlate;
-                }while(p != null);
-            }
-        }
-    }
-    void draw() {
-        updateWidth();
-        noStroke();
-        if(executingPlate == this){
-            setBorder();
-        }
-        fill(fillColor);
-        rect(x, y, pWidth, wallPlateHeight, 10);
-        rect(x, y, wallPlateWidth, pHeight, 10);
-        rect(x, y+pHeight-wallPlateHeight, pWidth, wallPlateHeight, 10);
-        if(executingPlate == this){
-            noStroke();
-            rect(x+2, y+2, pWidth-4, wallPlateHeight-2, 10);
-            rect(x+2, y+2, wallPlateWidth-2, pHeight-4, 10);
-            rect(x+2, y+pHeight-wallPlateHeight+2, pWidth-4, wallPlateHeight-2, 10);
-        }
-        stroke(0);
-        fill(0);
-        textSize(18);
-        // textFont(font);
-        textAlign(LEFT,TOP);
-        text("for", x+10, y+5);
-        txf.draw();
-        if(txf.checkChanged()){
-            isChange = true;
-        }
-    }
-    void drawShadow() {
-        noStroke();
-        fill(0, 0, 0, 180);
-        rect(x+8, y+8, pWidth, wallPlateHeight, 10);
-        rect(x+8, y+8, wallPlateWidth, pHeight, 10);
-        rect(x+8, y+8+pHeight-wallPlateHeight, pWidth, wallPlateHeight, 10);
-        draw();
-        for (Plate plate : loopOpes) {
-            plate.drawShadow();
-        }
-        if (nextPlate != null) {
-            nextPlate.drawShadow();
-        }
-    }
-    void drawTransparent() {
-        noStroke();
-        fill(179, 204, 87, alpha);
-        rect(x, y, pWidth, wallPlateHeight, 10);
-        rect(x, y, wallPlateWidth, pHeight, 10);
-        rect(x, y+pHeight-wallPlateHeight, pWidth, wallPlateHeight, 10);
-        stroke(0, alpha);
-        fill(0, alpha);
-        textSize(15);
-        textFont(font);
-        text("for", x+20, y+10);
-        txf.draw();
-    }
-    void setPlateInDebugmode(){
-        iter = getValue(txf.getText(),txf);
-        for(int i = 0; i < iter; i++){
-            for(int j = 0; j < loopOpes.size(); j++){
-                allPlateForDebugmode.add(loopOpes.get(j));
-            }
-        }
-    }
-    int index = 0;
-    private int count=0;
-    private int iter = 0;
-    ArrayList<Statement> doingOpes;
-    void setIter(int iter){
-        this.iter = iter;
-    }
-    void moveTo(int addX, int addY) {
-        x += addX;
-        y += addY;
-        txf.moveTo(x + 50, y + 5);
-        if (loopOpes.size() > 0) {
-            loopOpes.get(0).moveTo(addX, addY);
-        }
-        if (nextPlate != null) {
-            nextPlate.moveTo(addX, addY);
-        }
-    }
-    String getScript() {
-        StringBuilder result = new StringBuilder(getIndent());
-        result.append("for(" + txf.getText() + "){\n");
-        incrementIndent();
-        for (Plate plate : loopOpes) {
-            result.append(plate.getScript());
-        }
-        if(loopOpes.size() == 0){
-            result.append(getIndent() + "\n");
-        }
-        decrementIndent();
-        result.append(getIndent() + "}\n");
-        return result.toString();
-    }
-    void setLoopCount(String x){
-        this.txf.setText(x);
-    }
-}
 
 class ForPlate extends WallPlate{
     private Plate firstPlate;
     private Plate lastPlate;
     private ConditionPlate cond;
+    Balloon balloon;
     ForPlate(int x, int y){
         this.x = x;
         this.y = y;
@@ -910,21 +784,25 @@ class ForPlate extends WallPlate{
         if (nextPlate != null) {
             nextPlate.moveTo(addX, addY);
         }
+        if(balloon != null) balloon.shiftPos(addX,addY);
     }
     void execute(){
         firstPlate.execute();
-        while(cond.getCondition()){
+        while(cond.getCondition() && step < MAX_STEP_COUNT){
             if(hasExecuteEnd)   return;
             if(!loopOpes.isEmpty()){
                 Plate p = loopOpes.get(0);
                 do{
-                    println("aaa");
                     if(hasExecuteEnd)   return;
                     p.execute();
                     p = p.nextPlate;
                 }while(p != null);
             }
             lastPlate.execute();
+        }
+        if(step >= MAX_STEP_COUNT){
+            balloon = new Balloon("Error: step count is over " + MAX_STEP_COUNT +".", x + pWidth + MARGIN, y + wallPlateHeight+ MARGIN, x+ MARGIN, y + MARGIN);
+            hasError = true;
         }
     }
     String getScript(){
@@ -996,6 +874,7 @@ class Method extends Plate {
     void draw() {
         if(methodPlate == null){
             methodPlate = getMethodPlateByName(name);
+            balloonList.remove(balloon);
             if(methodPlate == null) balloon = new Balloon("Method:" + name + "() is undefined.", x + pWidth + MARGIN, y + pHeight + MARGIN, x + pWidth/2, y + pHeight/2);
             else balloon = null;
         }
@@ -1159,6 +1038,7 @@ class SetupPlate extends WallPlate {
         textFont(font);
         textAlign(LEFT,TOP);
         text("setup", x+10, y+5);
+
     }
     void drawShadow(){
         noStroke();
