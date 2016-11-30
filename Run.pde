@@ -442,16 +442,10 @@ public class Lang {
         if(next.kind != Enum.LBRACE) unexpectedTokenError(next);
         for(int i = 0; i < argSize; i++){
             String result = "";
+            next = getNextToken();
             while(true){
-                try{
-                    next = getNextToken();
-                }catch(Exception e){
-                    throw e;
-                }
-                if(next.kind == Enum.COMMA || (i==argSize-1 && next.kind==Enum.RBRACE)){
-                    break;
-                }
-                result += next.word;
+                result = E();
+                if(next.kind == Enum.COMMA || (i==argSize-1 && next.kind==Enum.RBRACE)) break;
             }
             argString[i] = result;
         }
@@ -711,6 +705,7 @@ public class Lang {
         statementList.add(new Statement(Enum.ASSIGN, argString));
         println("aaa");
     }
+    //関数定義
     void stmMethod() throws Exception{
         String[] argString = new String[1];
         argString[0] = next.word;   //メソッド名になる
@@ -761,6 +756,7 @@ public class Lang {
 
         statementList.add(new Statement(Enum.METHOD));
     }
+    //関数呼び出し
     void stmCallMethod(String methodName) throws Exception{
         StringList varNameList = new StringList();
         varNameList.append(methodName);
@@ -937,12 +933,12 @@ public class Lang {
             if (next.kind== Enum.MULT) {
                 sb.append(next.word);
                 next = getNextToken();
-                F();
+                sb.append(F());
                 addCode("ML 0 0");
             }else if (next.kind == Enum.DIV) {
                 sb.append(next.word);
                 next = getNextToken();
-                F();
+                sb.append(F());
                 addCode("DIV 0 0");
             }else {
                 break;
@@ -955,7 +951,7 @@ public class Lang {
         if (next.kind == Enum.LBRACE) {
             sb.append(next.word);
             next = getNextToken();
-            E();
+            sb.append(E());
             if (next.kind == Enum.RBRACE){
                 sb.append(next.word);
                 next = getNextToken();

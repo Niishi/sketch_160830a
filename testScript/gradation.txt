@@ -1,0 +1,10 @@
+void setup() {
+    int x = 200;
+    int y = 200;
+    int a = 5;
+    noStroke();
+    for(int i = a;i >= 0;int i = i-1;){
+        fill(255, 255/a*i, 255/a*i);
+        rect(x-i, y-i, 100+i*2, 30+i*2);
+    }
+}

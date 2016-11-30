@@ -58,6 +58,7 @@ boolean hasExecuteEnd = false;
 
 ArrayList<MyButton> buttonList = new ArrayList<MyButton>();
 
+LogicalOpePlate logi;
 void setup(){
     size(1800,900);
     RESULT_WINDOW_WIDTH  = width / 2;
@@ -82,6 +83,10 @@ void setup(){
     colorDict.put(Enum.BOOLEAN, #69B0DD);   //#E6F1F9
 
     executingPlate = setupPlate;
+
+    logi = new LogicalOpePlate(200,200);
+    plateList.add(logi);
+    isChange =true;
 }
 
 int[] trashBoxPosition;
@@ -157,7 +162,6 @@ void draw( ) {
         hasExecuteEnd = false;
         setupPlate.execute();
     }
-
     drawEditor();
     drawPlate();
     drawUI();
@@ -246,38 +250,7 @@ void updateInitialTileArrangement(){
 void keyPressed(KeyEvent e){
     editor.keyPressed(e);
     if(!editor.getFocus()){
-        if(key == 'z'){
-            // String[] arg = {"100","100","300","200"};
-            // plateList.add(new StatementPlate("rect", 100,100, arg));
-            // isChange = true;
-        }else if(key == 'x'){
-            // ForPlate l = new ForPlate(100,100);
-            // wallPlateList.add(l);
-            // plateList.add(l);
-            // isChange = true;
-        }else if(key == 'y'){
-            // MethodPlate mp = new MethodPlate(100,100);
-            // plateList.add(mp);
-            // wallPlateList.add(mp);
-            // isChange = true;
-        }else if(key == 'w'){
-            // plateList.add(new AssignmentPlate(Enum.INT,100,100,"x","0"));
-            // isChange = true;
-        }else if(key == 'f'){
-            // IfCondPlate fp = new IfCondPlate(100,100);
-            // plateList.add(fp);
-            // wallPlateList.add(fp);
-            // isChange = true;
-        }else if(key == 'r'){
-            // ReturnPlate rp = new ReturnPlate(100,100);
-            // plateList.add(rp);
-            // isChange = true;
-        } else if(key == 't'){
-            // ArrayPlate_Original ap = new ArrayPlate_Original(100,100,"a","10",Enum.INT_ARRAY);
-            // plateList.add(ap);
-            // isChange = true;
-        }
-        else if(key == 'a' && selectedPlate != null){
+        if(key == 'a' && selectedPlate != null){
             println(selectedPlate.changePlatetoString());
         }else if(e.isControlDown() && keyCode == RIGHT){
             if(isDebugMode){
@@ -360,7 +333,7 @@ void mousePressed() {
 void mouseDragged(){
     editor.mouseDragged();
     if(selectedPlate != null){
-        selectedPlate.moveTo(mouseX-pmouseX, mouseY-pmouseY);
+        selectedPlate.shiftPosition(mouseX-pmouseX, mouseY-pmouseY);
     }
     ///////////////////////////////////////////
     if(selectedBlock != null){
@@ -386,6 +359,13 @@ void mouseReleased() {
             selectedPlate = null;
             return;
         }
+        //タイルの上に持っているタイルが乗っているかどうかを判定する
+        for(Plate plate : plateList){
+            if(plate != selectedPlate && plate.isLogicalOpePlate && plate.isMouseOver()) {
+                ((LogicalOpePlate)plate).insertPlate(selectedPlate);
+            }
+        }
+
         //タイルの下にくっつける
         selectedPlate.checkPlateLink();
         for(int i = 0; i < plateList.size(); i++){

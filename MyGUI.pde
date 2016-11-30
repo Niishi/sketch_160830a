@@ -95,11 +95,11 @@ class MyButton extends MyGUI {
         }
     }
     void drawButton(color c){
-        int a = 6;
+        int a = h/5;
         int groundColor = 250;
         for(int i = a; i > 0; i--){
             fill(groundColor/a*i + red(c)/a*(a-i), groundColor/a*i + green(c)/a*(a-i), groundColor/a*i + blue(c)/a*(a-i));
-            rect(x-i,y-i,100+i*2,30+i*2);
+            rect(x-i,y-i,w+i*2,h+i*2);
         }
         fill(c);
         rect(x,y,w,h);
@@ -293,6 +293,10 @@ class MyComboBox extends MyGUI {
     void moveTo(int x, int y) {
         this.x = x;
         this.y = y;
+    }
+    void shiftPosition(int addX, int addY){
+        this.x += addX;
+        this.y += addY;
     }
 }
 

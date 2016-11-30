@@ -382,6 +382,7 @@ class MyTextEditor {
                     result += currentChar;
                     currentPosition++;
                 }
+                isEnd = true;
             }else if(currentChar == DIV){
                 if(isSentou){
                     result += currentChar;

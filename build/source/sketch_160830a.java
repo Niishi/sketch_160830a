@@ -78,6 +78,7 @@ boolean hasExecuteEnd = false;
 
 ArrayList<MyButton> buttonList = new ArrayList<MyButton>();
 
+LogicalOpePlate logi;
 public void setup(){
     
     RESULT_WINDOW_WIDTH  = width / 2;
@@ -102,6 +103,10 @@ public void setup(){
     colorDict.put(Enum.BOOLEAN, 0xff69B0DD);   //#E6F1F9
 
     executingPlate = setupPlate;
+
+    logi = new LogicalOpePlate(200,200);
+    plateList.add(logi);
+    isChange =true;
 }
 
 int[] trashBoxPosition;
@@ -177,7 +182,6 @@ public void draw( ) {
         hasExecuteEnd = false;
         setupPlate.execute();
     }
-
     drawEditor();
     drawPlate();
     drawUI();
@@ -266,38 +270,7 @@ public void updateInitialTileArrangement(){
 public void keyPressed(KeyEvent e){
     editor.keyPressed(e);
     if(!editor.getFocus()){
-        if(key == 'z'){
-            // String[] arg = {"100","100","300","200"};
-            // plateList.add(new StatementPlate("rect", 100,100, arg));
-            // isChange = true;
-        }else if(key == 'x'){
-            // ForPlate l = new ForPlate(100,100);
-            // wallPlateList.add(l);
-            // plateList.add(l);
-            // isChange = true;
-        }else if(key == 'y'){
-            // MethodPlate mp = new MethodPlate(100,100);
-            // plateList.add(mp);
-            // wallPlateList.add(mp);
-            // isChange = true;
-        }else if(key == 'w'){
-            // plateList.add(new AssignmentPlate(Enum.INT,100,100,"x","0"));
-            // isChange = true;
-        }else if(key == 'f'){
-            // IfCondPlate fp = new IfCondPlate(100,100);
-            // plateList.add(fp);
-            // wallPlateList.add(fp);
-            // isChange = true;
-        }else if(key == 'r'){
-            // ReturnPlate rp = new ReturnPlate(100,100);
-            // plateList.add(rp);
-            // isChange = true;
-        } else if(key == 't'){
-            // ArrayPlate_Original ap = new ArrayPlate_Original(100,100,"a","10",Enum.INT_ARRAY);
-            // plateList.add(ap);
-            // isChange = true;
-        }
-        else if(key == 'a' && selectedPlate != null){
+        if(key == 'a' && selectedPlate != null){
             println(selectedPlate.changePlatetoString());
         }else if(e.isControlDown() && keyCode == RIGHT){
             if(isDebugMode){
@@ -380,7 +353,7 @@ public void mousePressed() {
 public void mouseDragged(){
     editor.mouseDragged();
     if(selectedPlate != null){
-        selectedPlate.moveTo(mouseX-pmouseX, mouseY-pmouseY);
+        selectedPlate.shiftPosition(mouseX-pmouseX, mouseY-pmouseY);
     }
     ///////////////////////////////////////////
     if(selectedBlock != null){
@@ -980,6 +953,19 @@ class LoadTextEditorThread extends Thread {
         new Lang(editor.getTokens()).run();
     }
 }
+
+boolean isRunning = false;
+class RunningStateThread extends Thread{
+    int x;
+    int y;
+    RunningStateThread(int x, int y){
+        this.x = x;
+        this.y = y;
+    }
+    public void run(){
+
+    }
+}
 //\u81ea\u4f5c\u306eGUI\u30dc\u30bf\u30f3
 //\u3064\u304f\u308a\u304b\u3051\u3001\u3082\u3063\u3068\u3057\u3063\u304b\u308a\u3064\u304f\u308b
 
@@ -1077,11 +1063,11 @@ class MyButton extends MyGUI {
         }
     }
     public void drawButton(int c){
-        int a = 6;
+        int a = h/5;
         int groundColor = 250;
         for(int i = a; i > 0; i--){
             fill(groundColor/a*i + red(c)/a*(a-i), groundColor/a*i + green(c)/a*(a-i), groundColor/a*i + blue(c)/a*(a-i));
-            rect(x-i,y-i,100+i*2,30+i*2);
+            rect(x-i,y-i,w+i*2,h+i*2);
         }
         fill(c);
         rect(x,y,w,h);
@@ -1275,6 +1261,10 @@ class MyComboBox extends MyGUI {
     public void moveTo(int x, int y) {
         this.x = x;
         this.y = y;
+    }
+    public void shiftPosition(int addX, int addY){
+        this.x += addX;
+        this.y += addY;
     }
 }
 
@@ -1904,6 +1894,7 @@ class MyTextEditor {
                     result += currentChar;
                     currentPosition++;
                 }
+                isEnd = true;
             }else if(currentChar == DIV){
                 if(isSentou){
                     result += currentChar;
@@ -2709,7 +2700,7 @@ public abstract class Plate {
     public abstract void draw();
     public abstract void drawShadow();
     public abstract void drawTransparent();
-    public abstract void moveTo(int addX, int addY);
+    public abstract void shiftPosition(int addX, int addY);
     public abstract void execute();
     public abstract String getScript();
 
@@ -2795,13 +2786,13 @@ public abstract class Plate {
     public void goToUnderThePlate(Plate plate){
         int differencePosX = plate.x - this.x;
         int differencePosY = plate.y + plate.pHeight - this.y;
-        this.moveTo(differencePosX, differencePosY);
+        this.shiftPosition(differencePosX, differencePosY);
     }
     public void goIntoWallPlate(WallPlate wallPlate){
         int index = wallPlate.loopOpes.indexOf(this);
         int differencePosX = wallPlate.x + wallPlate.wallPlateWidth - this.x;
         int differencePosY = wallPlate.getPositionYinLoopOpes(index) - this.y;
-        this.moveTo(differencePosX, differencePosY);
+        this.shiftPosition(differencePosX, differencePosY);
     }
     public void setBorder(){
         if(isDebugMode)
@@ -2853,6 +2844,9 @@ public abstract class Plate {
     public int getFillColor(){
         return fillColor;
     }
+    public void moveTo(int x, int y){
+        this.x = x; this.y = y;
+    }
 }
 public abstract class WallPlate extends Plate {
     ArrayList<Plate> loopOpes = new ArrayList<Plate>();
@@ -2871,7 +2865,7 @@ public abstract class WallPlate extends Plate {
             upperPlate.resize(addX, addY);
         }
         if (nextPlate != null) {
-            nextPlate.moveTo(0, addY);
+            nextPlate.shiftPosition(0, addY);
         }
     }
     protected void updateWidth(){
@@ -3187,14 +3181,14 @@ class StatementPlate extends Plate {
         }
         return false;
     }
-    public void moveTo(int addX, int addY) {
+    public void shiftPosition(int addX, int addY) {
         x += addX;
         y += addY ; //\u547d\u4ee4\u6587\u3092\u79fb\u52d5
         comboBox.x += addX;  //\u64cd\u4f5c\u5185\u306e\u30b3\u30f3\u30dc\u30dc\u30c3\u30af\u30b9\u3092\u79fb\u52d5
         comboBox.y += addY;
         setTextFieldPosition();
         if (nextPlate != null) {
-            nextPlate.moveTo(addX, addY);
+            nextPlate.shiftPosition(addX, addY);
         }
     }
     public String getComboBoxText() {
@@ -3348,11 +3342,11 @@ class AssignmentPlate extends Plate {
     private int getSumTextFieldWidth(){
         return valueTxf.getWidth() + txfInterval*2 + equalWidth + variableNameTxf.getWidth();
     }
-    public void moveTo(int addX, int addY){
+    public void shiftPosition(int addX, int addY){
         x += addX;
         y += addY ; //\u547d\u4ee4\u6587\u3092\u79fb\u52d5
         if (nextPlate != null) {
-            nextPlate.moveTo(addX, addY);
+            nextPlate.shiftPosition(addX, addY);
         }
         variableNameTxf.shiftPos(addX, addY);
         valueTxf.shiftPos(addX, addY);
@@ -3414,9 +3408,9 @@ class ForPlate extends WallPlate{
         this.firstPlate = firstPlate;
         this.lastPlate  = lastPlate;
         this.cond       = cond;
-        this.firstPlate.moveTo(wallPlateWidth + MARGIN, MARGIN/2);
-        this.lastPlate.moveTo(wallPlateWidth + MARGIN, pHeight - wallPlateHeightBottom);
-        this.cond.moveTo(x + wallPlateWidth + MARGIN, y + 30 + MARGIN);
+        this.firstPlate.shiftPosition(wallPlateWidth + MARGIN, MARGIN/2);
+        this.lastPlate.shiftPosition(wallPlateWidth + MARGIN, pHeight - wallPlateHeightBottom);
+        this.cond.shiftPosition(x + wallPlateWidth + MARGIN, y + 30 + MARGIN);
     }
     public void draw(){
         updateWidth();
@@ -3454,19 +3448,19 @@ class ForPlate extends WallPlate{
     }
     public void resize(int addX, int addY){
         super.resize(addX, addY);
-        lastPlate.moveTo(0, addY);
+        lastPlate.shiftPosition(0, addY);
     }
-    public void moveTo(int addX, int addY){
+    public void shiftPosition(int addX, int addY){
 		x += addX;
         y += addY ; //\u547d\u4ee4\u6587\u3092\u79fb\u52d5
-        firstPlate.moveTo(addX, addY);
-        lastPlate.moveTo(addX, addY);
-        cond.moveTo(addX, addY);
+        firstPlate.shiftPosition(addX, addY);
+        lastPlate.shiftPosition(addX, addY);
+        cond.shiftPosition(addX, addY);
         if (loopOpes.size() > 0) {
-            loopOpes.get(0).moveTo(addX, addY);
+            loopOpes.get(0).shiftPosition(addX, addY);
         }
         if (nextPlate != null) {
-            nextPlate.moveTo(addX, addY);
+            nextPlate.shiftPosition(addX, addY);
         }
         if(balloon != null) balloon.shiftPos(addX,addY);
     }
@@ -3642,12 +3636,12 @@ class Method extends Plate {
         }
         return names;
     }
-    public void moveTo(int addX, int addY) {
+    public void shiftPosition(int addX, int addY) {
         x += addX;
         y += addY;
         setTextFieldPosition();
         if (nextPlate != null) {
-            nextPlate.moveTo(addX, addY);
+            nextPlate.shiftPosition(addX, addY);
         }
     }
     public boolean isMouseOver() {
@@ -3740,14 +3734,14 @@ class SetupPlate extends WallPlate {
     }
     public void drawTransparent(){
     }
-    public void moveTo(int addX, int addY) {
+    public void shiftPosition(int addX, int addY) {
         x += addX;
         y += addY ; //\u547d\u4ee4\u6587\u3092\u79fb\u52d5
         if (loopOpes.size() > 0) {
-            loopOpes.get(0).moveTo(addX, addY);
+            loopOpes.get(0).shiftPosition(addX, addY);
         }
         if (nextPlate != null) {
-            nextPlate.moveTo(addX, addY);
+            nextPlate.shiftPosition(addX, addY);
         }
     }
     public String getScript() {
@@ -3968,16 +3962,16 @@ class MethodPlate extends WallPlate {
         removeVarButton.draw();
         strokeWeight(2);
     }
-    public void moveTo(int addX, int addY) {
+    public void shiftPosition(int addX, int addY) {
         x += addX;
         y += addY;
         typeBox.moveTo(x + MARGIN, y + 5);
         setTextFieldPosition();
         if (loopOpes.size() > 0) {
-            loopOpes.get(0).moveTo(addX, addY);
+            loopOpes.get(0).shiftPosition(addX, addY);
         }
         if (nextPlate != null) {
-            nextPlate.moveTo(addX, addY);
+            nextPlate.shiftPosition(addX, addY);
         }
     }
     public boolean isPlateBelow(Plate plate) {
@@ -4034,11 +4028,11 @@ class ConditionPlate extends Plate {
     MyTextField txf2;
     IfCondPlate plate;
     int state = -1; //-1\u306e\u72b6\u6cc1\u306f\u6761\u4ef6\u5f0f\u306e\u5224\u5b9a\u524d
-    private boolean isBoolean       = false;
-    private final int START_MARGIN  = 5;
-    private final int MARGIN        = 10;
-    private final int COMBOBOX_Y    = 3;
-    private final int TXF_POS_Y     = 3;
+    boolean isBoolean       = false;
+    final int START_MARGIN  = 5;
+    final int MARGIN        = 10;
+    final int COMBOBOX_Y    = 3;
+    final int TXF_POS_Y     = 3;
     ConditionPlate(int x, int y) {
         this.x = x;
         this.y = y;
@@ -4159,15 +4153,15 @@ class ConditionPlate extends Plate {
         txf1.setFillColor(colorDict.get(Enum.BOOLEAN));
         isBoolean = true;
     }
-    public void moveTo(int addX, int addY) {
+    public void shiftPosition(int addX, int addY) {
         x += addX;  //\u64cd\u4f5c\u81ea\u4f53\u79fb\u52d5
         y += addY ;
         setTextFieldPosition();
         if (plate != null) {
-            plate.moveTo(addX, addY);
+            plate.shiftPosition(addX, addY);
         }
         if (nextPlate != null) {
-            nextPlate.moveTo(addX, addY);
+            nextPlate.shiftPosition(addX, addY);
         }
     }
     public boolean isMouseOver() {
@@ -4228,7 +4222,7 @@ class IfCondPlate extends WallPlate {
     }
     private void setConditionPlate(ConditionPlate cp){
         cond = cp;
-        cond.moveTo(x+ 35, y + 2);
+        cond.shiftPosition(x+ 35, y + 2);
     }
     private void updateByCondPlateWidth(){
         int tmpWidth = (cond.x + cond.pWidth + MARGIN) -(this.x);
@@ -4260,15 +4254,15 @@ class IfCondPlate extends WallPlate {
         text("if", x+10, y+5);
         cond.drawTransparent();
     }
-    public void moveTo(int addX, int addY){
+    public void shiftPosition(int addX, int addY){
         x += addX;
         y += addY;
-        cond.moveTo(addX, addY);
+        cond.shiftPosition(addX, addY);
         if (loopOpes.size() > 0) {
-            loopOpes.get(0).moveTo(addX, addY);
+            loopOpes.get(0).shiftPosition(addX, addY);
         }
         if (nextPlate != null) {
-            nextPlate.moveTo(addX, addY);
+            nextPlate.shiftPosition(addX, addY);
         }
     }
     public String getScript() {
@@ -4320,13 +4314,13 @@ class ReturnPlate extends Plate {
     }
     public void drawTransparent(){
     }
-    public void moveTo(int addX, int addY){
+    public void shiftPosition(int addX, int addY){
         x += addX;
         y += addY ; //\u547d\u4ee4\u6587\u3092\u79fb\u52d5
         txf.x += addX;
         txf.y += addY;
         if (nextPlate != null) {
-            nextPlate.moveTo(addX, addY);
+            nextPlate.shiftPosition(addX, addY);
         }
     }
     public void execute(){
@@ -4382,12 +4376,12 @@ public abstract class ArrayPlate extends Plate{
         checkGUIChange();
         drawGUI();
     }
-    public void moveTo(int addX, int addY){
+    public void shiftPosition(int addX, int addY){
         x += addX;
         y += addY ; //\u547d\u4ee4\u6587\u3092\u79fb\u52d5
         setGUIPosition();
         if (nextPlate != null) {
-            nextPlate.moveTo(addX, addY);
+            nextPlate.shiftPosition(addX, addY);
         }
     }
     public int getType(){
@@ -4784,12 +4778,12 @@ class ArrayAssignPlate extends Plate {
     }
     public void drawTransparent(){
     }
-    public void moveTo(int addX, int addY){
+    public void shiftPosition(int addX, int addY){
 		x += addX;
         y += addY ; //\u547d\u4ee4\u6587\u3092\u79fb\u52d5
         setGUIPosition();
         if (nextPlate != null) {
-            nextPlate.moveTo(addX, addY);
+            nextPlate.shiftPosition(addX, addY);
         }
     }
     public void execute(){
@@ -4903,11 +4897,11 @@ class VariablePlate extends Plate {
     public void drawTransparent(){
 
     }
-    public void moveTo(int addX, int addY){
+    public void shiftPosition(int addX, int addY){
 		x += addX;
         y += addY ; //\u547d\u4ee4\u6587\u3092\u79fb\u52d5
         if (nextPlate != null) {
-            nextPlate.moveTo(addX, addY);
+            nextPlate.shiftPosition(addX, addY);
         }
     }
     public void execute(){
@@ -4979,14 +4973,14 @@ class DrawPlate extends WallPlate {
     }
     public void drawTransparent(){
     }
-    public void moveTo(int addX, int addY) {
+    public void shiftPosition(int addX, int addY) {
         x += addX;
         y += addY ; //\u547d\u4ee4\u6587\u3092\u79fb\u52d5
         if (loopOpes.size() > 0) {
-            loopOpes.get(0).moveTo(addX, addY);
+            loopOpes.get(0).shiftPosition(addX, addY);
         }
         if (nextPlate != null) {
-            nextPlate.moveTo(addX, addY);
+            nextPlate.shiftPosition(addX, addY);
         }
     }
     public String getScript() {
@@ -5005,6 +4999,104 @@ class DrawPlate extends WallPlate {
         result.append("}\n");
         return result.toString();
     }
+}
+
+final int SPACE_WIDTH = 30;
+final int SPACE_HEIGHT = 20;
+class LogicalOpePlate extends ConditionPlate {
+    ConditionPlate leftCond;
+    ConditionPlate rightCond;
+    MyComboBox operationBox;
+	LogicalOpePlate(int x, int y){
+        super(x,y);
+		this.x = x;
+		this.y = y;
+		pHeight = 30;
+		fillColor = color(0xffE0E4CC);//\u597d\u304d\u306a\u8272\u3092\u57cb\u3081\u308b
+        String[] opeItems = {
+            "&&", "||", "!"
+        };
+        operationBox = new MyComboBox(opeItems, x + 10, y +5, 70, 20);
+        setGUIPosition();
+	}
+    public void draw(){
+		if(executingPlate == this){
+            setBorder();
+        }  else {
+            noStroke();
+        }
+		fill(fillColor);
+		rect(x,y,pWidth,pHeight);
+        if(leftCond != null){
+            leftCond.draw();
+        }else{
+            fill(255);
+            noStroke();
+            rect(leftHandX,y+5, SPACE_WIDTH, SPACE_HEIGHT,10);
+        }
+        if(rightCond != null){
+            rightCond.draw();
+        }else{
+            fill(255);
+            noStroke();
+            rect(rightHandX,y+5, SPACE_WIDTH, SPACE_HEIGHT,10);
+        }
+        operationBox.draw();
+    }
+    public void drawShadow(){
+		noStroke();
+        fill(0, 0, 0, 180);
+        rect(x+8, y+8, pWidth, pHeight, 10);
+        draw();
+        if (nextPlate != null) {
+            nextPlate.drawShadow();
+        }
+    }
+    public void drawTransparent(){
+    }
+    public void shiftPosition(int addX, int addY){
+		x += addX;
+        y += addY ; //\u547d\u4ee4\u6587\u3092\u79fb\u52d5
+        if(leftCond != null) leftCond.shiftPosition(addX,addY);
+        else leftHandX += addX;
+        if(rightCond != null) rightCond.shiftPosition(addX,addY);
+        else rightHandX += addX;
+
+        operationBox.shiftPosition(addX, addY);
+        if (nextPlate != null) {
+            nextPlate.shiftPosition(addX, addY);
+        }
+    }
+    public void execute(){
+
+    }
+    int leftHandX = 0;
+    int rightHandX = 0;
+    public void setGUIPosition(){
+        pWidth = START_MARGIN;
+        int tmpx = x + pWidth;
+
+        if(leftCond != null) tmpx += leftCond.pWidth + MARGIN;
+        else {
+            leftHandX = tmpx;
+            tmpx += SPACE_WIDTH + MARGIN;
+        }
+        operationBox.moveTo(tmpx, y + TXF_POS_Y);
+        tmpx += operationBox.getWidth() + MARGIN;
+
+        if(rightCond != null){
+            rightCond.moveTo(tmpx, y);
+            tmpx += rightCond.pWidth + START_MARGIN;
+        }else{
+            rightHandX = tmpx;
+            tmpx += SPACE_WIDTH + START_MARGIN;
+        }
+        pWidth = tmpx - x;
+    }
+    public String getScript(){
+		StringBuilder result = new StringBuilder();
+		return result.toString();
+	}
 }
 ArrayList<Statement> statementList;
 int stmCount = -1;
@@ -5450,16 +5542,10 @@ public class Lang {
         if(next.kind != Enum.LBRACE) unexpectedTokenError(next);
         for(int i = 0; i < argSize; i++){
             String result = "";
+            next = getNextToken();
             while(true){
-                try{
-                    next = getNextToken();
-                }catch(Exception e){
-                    throw e;
-                }
-                if(next.kind == Enum.COMMA || (i==argSize-1 && next.kind==Enum.RBRACE)){
-                    break;
-                }
-                result += next.word;
+                result = E();
+                if(next.kind == Enum.COMMA || (i==argSize-1 && next.kind==Enum.RBRACE)) break;
             }
             argString[i] = result;
         }
@@ -5719,6 +5805,7 @@ public class Lang {
         statementList.add(new Statement(Enum.ASSIGN, argString));
         println("aaa");
     }
+    //\u95a2\u6570\u5b9a\u7fa9
     public void stmMethod() throws Exception{
         String[] argString = new String[1];
         argString[0] = next.word;   //\u30e1\u30bd\u30c3\u30c9\u540d\u306b\u306a\u308b
@@ -5769,6 +5856,7 @@ public class Lang {
 
         statementList.add(new Statement(Enum.METHOD));
     }
+    //\u95a2\u6570\u547c\u3073\u51fa\u3057
     public void stmCallMethod(String methodName) throws Exception{
         StringList varNameList = new StringList();
         varNameList.append(methodName);
@@ -5945,12 +6033,12 @@ public class Lang {
             if (next.kind== Enum.MULT) {
                 sb.append(next.word);
                 next = getNextToken();
-                F();
+                sb.append(F());
                 addCode("ML 0 0");
             }else if (next.kind == Enum.DIV) {
                 sb.append(next.word);
                 next = getNextToken();
-                F();
+                sb.append(F());
                 addCode("DIV 0 0");
             }else {
                 break;
@@ -5963,7 +6051,7 @@ public class Lang {
         if (next.kind == Enum.LBRACE) {
             sb.append(next.word);
             next = getNextToken();
-            E();
+            sb.append(E());
             if (next.kind == Enum.RBRACE){
                 sb.append(next.word);
                 next = getNextToken();

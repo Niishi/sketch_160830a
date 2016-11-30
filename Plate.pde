@@ -14,18 +14,20 @@ public abstract class Plate {
     int x, y;
     int pWidth, pHeight;
     int[] targetPos;
+
     WallPlate upperPlate;  //所属するループ
     Plate prePlate;  //上にある操作
     Plate nextPlate;  //下にある操作
     FuncPlate belongPlate;
-    boolean isWallPlate = false;
     protected color fillColor;
+    boolean isWallPlate = false;
     boolean isVariablePlate = false;
+    boolean isLogicalOpePlate = false;
 
     public abstract void draw();
     public abstract void drawShadow();
     public abstract void drawTransparent();
-    public abstract void moveTo(int addX, int addY);
+    public abstract void shiftPosition(int addX, int addY);
     public abstract void execute();
     public abstract String getScript();
 
@@ -111,13 +113,13 @@ public abstract class Plate {
     public void goToUnderThePlate(Plate plate){
         int differencePosX = plate.x - this.x;
         int differencePosY = plate.y + plate.pHeight - this.y;
-        this.moveTo(differencePosX, differencePosY);
+        this.shiftPosition(differencePosX, differencePosY);
     }
     public void goIntoWallPlate(WallPlate wallPlate){
         int index = wallPlate.loopOpes.indexOf(this);
         int differencePosX = wallPlate.x + wallPlate.wallPlateWidth - this.x;
         int differencePosY = wallPlate.getPositionYinLoopOpes(index) - this.y;
-        this.moveTo(differencePosX, differencePosY);
+        this.shiftPosition(differencePosX, differencePosY);
     }
     public void setBorder(){
         if(isDebugMode)
@@ -169,6 +171,9 @@ public abstract class Plate {
     public int getFillColor(){
         return fillColor;
     }
+    void moveTo(int x, int y){
+        this.x = x; this.y = y;
+    }
 }
 public abstract class WallPlate extends Plate {
     ArrayList<Plate> loopOpes = new ArrayList<Plate>();
@@ -187,7 +192,7 @@ public abstract class WallPlate extends Plate {
             upperPlate.resize(addX, addY);
         }
         if (nextPlate != null) {
-            nextPlate.moveTo(0, addY);
+            nextPlate.shiftPosition(0, addY);
         }
     }
     protected void updateWidth(){
@@ -503,14 +508,14 @@ class StatementPlate extends Plate {
         }
         return false;
     }
-    void moveTo(int addX, int addY) {
+    void shiftPosition(int addX, int addY) {
         x += addX;
         y += addY ; //命令文を移動
         comboBox.x += addX;  //操作内のコンボボックスを移動
         comboBox.y += addY;
         setTextFieldPosition();
         if (nextPlate != null) {
-            nextPlate.moveTo(addX, addY);
+            nextPlate.shiftPosition(addX, addY);
         }
     }
     String getComboBoxText() {
@@ -664,11 +669,11 @@ class AssignmentPlate extends Plate {
     private int getSumTextFieldWidth(){
         return valueTxf.getWidth() + txfInterval*2 + equalWidth + variableNameTxf.getWidth();
     }
-    void moveTo(int addX, int addY){
+    void shiftPosition(int addX, int addY){
         x += addX;
         y += addY ; //命令文を移動
         if (nextPlate != null) {
-            nextPlate.moveTo(addX, addY);
+            nextPlate.shiftPosition(addX, addY);
         }
         variableNameTxf.shiftPos(addX, addY);
         valueTxf.shiftPos(addX, addY);
@@ -730,9 +735,9 @@ class ForPlate extends WallPlate{
         this.firstPlate = firstPlate;
         this.lastPlate  = lastPlate;
         this.cond       = cond;
-        this.firstPlate.moveTo(wallPlateWidth + MARGIN, MARGIN/2);
-        this.lastPlate.moveTo(wallPlateWidth + MARGIN, pHeight - wallPlateHeightBottom);
-        this.cond.moveTo(x + wallPlateWidth + MARGIN, y + 30 + MARGIN);
+        this.firstPlate.shiftPosition(wallPlateWidth + MARGIN, MARGIN/2);
+        this.lastPlate.shiftPosition(wallPlateWidth + MARGIN, pHeight - wallPlateHeightBottom);
+        this.cond.shiftPosition(x + wallPlateWidth + MARGIN, y + 30 + MARGIN);
     }
     void draw(){
         updateWidth();
@@ -770,19 +775,19 @@ class ForPlate extends WallPlate{
     }
     void resize(int addX, int addY){
         super.resize(addX, addY);
-        lastPlate.moveTo(0, addY);
+        lastPlate.shiftPosition(0, addY);
     }
-    void moveTo(int addX, int addY){
+    void shiftPosition(int addX, int addY){
 		x += addX;
         y += addY ; //命令文を移動
-        firstPlate.moveTo(addX, addY);
-        lastPlate.moveTo(addX, addY);
-        cond.moveTo(addX, addY);
+        firstPlate.shiftPosition(addX, addY);
+        lastPlate.shiftPosition(addX, addY);
+        cond.shiftPosition(addX, addY);
         if (loopOpes.size() > 0) {
-            loopOpes.get(0).moveTo(addX, addY);
+            loopOpes.get(0).shiftPosition(addX, addY);
         }
         if (nextPlate != null) {
-            nextPlate.moveTo(addX, addY);
+            nextPlate.shiftPosition(addX, addY);
         }
         if(balloon != null) balloon.shiftPos(addX,addY);
     }
@@ -958,12 +963,12 @@ class Method extends Plate {
         }
         return names;
     }
-    void moveTo(int addX, int addY) {
+    void shiftPosition(int addX, int addY) {
         x += addX;
         y += addY;
         setTextFieldPosition();
         if (nextPlate != null) {
-            nextPlate.moveTo(addX, addY);
+            nextPlate.shiftPosition(addX, addY);
         }
     }
     boolean isMouseOver() {
@@ -1056,14 +1061,14 @@ class SetupPlate extends WallPlate {
     }
     void drawTransparent(){
     }
-    void moveTo(int addX, int addY) {
+    void shiftPosition(int addX, int addY) {
         x += addX;
         y += addY ; //命令文を移動
         if (loopOpes.size() > 0) {
-            loopOpes.get(0).moveTo(addX, addY);
+            loopOpes.get(0).shiftPosition(addX, addY);
         }
         if (nextPlate != null) {
-            nextPlate.moveTo(addX, addY);
+            nextPlate.shiftPosition(addX, addY);
         }
     }
     String getScript() {
@@ -1284,16 +1289,16 @@ class MethodPlate extends WallPlate {
         removeVarButton.draw();
         strokeWeight(2);
     }
-    void moveTo(int addX, int addY) {
+    void shiftPosition(int addX, int addY) {
         x += addX;
         y += addY;
         typeBox.moveTo(x + MARGIN, y + 5);
         setTextFieldPosition();
         if (loopOpes.size() > 0) {
-            loopOpes.get(0).moveTo(addX, addY);
+            loopOpes.get(0).shiftPosition(addX, addY);
         }
         if (nextPlate != null) {
-            nextPlate.moveTo(addX, addY);
+            nextPlate.shiftPosition(addX, addY);
         }
     }
     boolean isPlateBelow(Plate plate) {
@@ -1350,11 +1355,11 @@ class ConditionPlate extends Plate {
     MyTextField txf2;
     IfCondPlate plate;
     int state = -1; //-1の状況は条件式の判定前
-    private boolean isBoolean       = false;
-    private final int START_MARGIN  = 5;
-    private final int MARGIN        = 10;
-    private final int COMBOBOX_Y    = 3;
-    private final int TXF_POS_Y     = 3;
+    boolean isBoolean       = false;
+    final int START_MARGIN  = 5;
+    final int MARGIN        = 10;
+    final int COMBOBOX_Y    = 3;
+    final int TXF_POS_Y     = 3;
     ConditionPlate(int x, int y) {
         this.x = x;
         this.y = y;
@@ -1475,15 +1480,15 @@ class ConditionPlate extends Plate {
         txf1.setFillColor(colorDict.get(Enum.BOOLEAN));
         isBoolean = true;
     }
-    void moveTo(int addX, int addY) {
+    void shiftPosition(int addX, int addY) {
         x += addX;  //操作自体移動
         y += addY ;
         setTextFieldPosition();
         if (plate != null) {
-            plate.moveTo(addX, addY);
+            plate.shiftPosition(addX, addY);
         }
         if (nextPlate != null) {
-            nextPlate.moveTo(addX, addY);
+            nextPlate.shiftPosition(addX, addY);
         }
     }
     boolean isMouseOver() {
@@ -1544,7 +1549,7 @@ class IfCondPlate extends WallPlate {
     }
     private void setConditionPlate(ConditionPlate cp){
         cond = cp;
-        cond.moveTo(x+ 35, y + 2);
+        cond.shiftPosition(x+ 35, y + 2);
     }
     private void updateByCondPlateWidth(){
         int tmpWidth = (cond.x + cond.pWidth + MARGIN) -(this.x);
@@ -1576,15 +1581,15 @@ class IfCondPlate extends WallPlate {
         text("if", x+10, y+5);
         cond.drawTransparent();
     }
-    void moveTo(int addX, int addY){
+    void shiftPosition(int addX, int addY){
         x += addX;
         y += addY;
-        cond.moveTo(addX, addY);
+        cond.shiftPosition(addX, addY);
         if (loopOpes.size() > 0) {
-            loopOpes.get(0).moveTo(addX, addY);
+            loopOpes.get(0).shiftPosition(addX, addY);
         }
         if (nextPlate != null) {
-            nextPlate.moveTo(addX, addY);
+            nextPlate.shiftPosition(addX, addY);
         }
     }
     String getScript() {
@@ -1636,13 +1641,13 @@ class ReturnPlate extends Plate {
     }
     void drawTransparent(){
     }
-    void moveTo(int addX, int addY){
+    void shiftPosition(int addX, int addY){
         x += addX;
         y += addY ; //命令文を移動
         txf.x += addX;
         txf.y += addY;
         if (nextPlate != null) {
-            nextPlate.moveTo(addX, addY);
+            nextPlate.shiftPosition(addX, addY);
         }
     }
     void execute(){
@@ -1698,12 +1703,12 @@ public abstract class ArrayPlate extends Plate{
         checkGUIChange();
         drawGUI();
     }
-    void moveTo(int addX, int addY){
+    void shiftPosition(int addX, int addY){
         x += addX;
         y += addY ; //命令文を移動
         setGUIPosition();
         if (nextPlate != null) {
-            nextPlate.moveTo(addX, addY);
+            nextPlate.shiftPosition(addX, addY);
         }
     }
     public int getType(){
@@ -2100,12 +2105,12 @@ class ArrayAssignPlate extends Plate {
     }
     void drawTransparent(){
     }
-    void moveTo(int addX, int addY){
+    void shiftPosition(int addX, int addY){
 		x += addX;
         y += addY ; //命令文を移動
         setGUIPosition();
         if (nextPlate != null) {
-            nextPlate.moveTo(addX, addY);
+            nextPlate.shiftPosition(addX, addY);
         }
     }
     void execute(){
@@ -2219,11 +2224,11 @@ class VariablePlate extends Plate {
     void drawTransparent(){
 
     }
-    void moveTo(int addX, int addY){
+    void shiftPosition(int addX, int addY){
 		x += addX;
         y += addY ; //命令文を移動
         if (nextPlate != null) {
-            nextPlate.moveTo(addX, addY);
+            nextPlate.shiftPosition(addX, addY);
         }
     }
     void execute(){
@@ -2295,14 +2300,14 @@ class DrawPlate extends WallPlate {
     }
     void drawTransparent(){
     }
-    void moveTo(int addX, int addY) {
+    void shiftPosition(int addX, int addY) {
         x += addX;
         y += addY ; //命令文を移動
         if (loopOpes.size() > 0) {
-            loopOpes.get(0).moveTo(addX, addY);
+            loopOpes.get(0).shiftPosition(addX, addY);
         }
         if (nextPlate != null) {
-            nextPlate.moveTo(addX, addY);
+            nextPlate.shiftPosition(addX, addY);
         }
     }
     String getScript() {
@@ -2321,4 +2326,110 @@ class DrawPlate extends WallPlate {
         result.append("}\n");
         return result.toString();
     }
+}
+
+final int SPACE_WIDTH = 30;
+final int SPACE_HEIGHT = 20;
+class LogicalOpePlate extends ConditionPlate {
+    ConditionPlate leftCond;
+    ConditionPlate rightCond;
+    MyComboBox operationBox;
+	LogicalOpePlate(int x, int y){
+        super(x,y);
+		this.x = x;
+		this.y = y;
+		pHeight = 30;
+		fillColor = color(#E0E4CC);//好きな色を埋める
+        String[] opeItems = {
+            "&&", "||", "!"
+        };
+        operationBox = new MyComboBox(opeItems, x + 10, y +5, 70, 20);
+        operationBox.setItem(opeItems[0]);
+        setGUIPosition();
+        isLogicalOpePlate = true;
+	}
+    void draw(){
+		if(executingPlate == this){
+            setBorder();
+        }  else {
+            noStroke();
+        }
+		fill(fillColor);
+		rect(x,y,pWidth,pHeight,10);
+        if(leftCond != null){
+            leftCond.draw();
+        }else{
+            fill(255);
+            noStroke();
+            rect(leftHandX,y+5, SPACE_WIDTH, SPACE_HEIGHT,10);
+        }
+        if(rightCond != null){
+            rightCond.draw();
+        }else{
+            fill(255);
+            noStroke();
+            rect(rightHandX,y+5, SPACE_WIDTH, SPACE_HEIGHT,10);
+        }
+        operationBox.draw();
+    }
+    void drawShadow(){
+		noStroke();
+        fill(0, 0, 0, 180);
+        rect(x+8, y+8, pWidth, pHeight, 10);
+        draw();
+        if (nextPlate != null) {
+            nextPlate.drawShadow();
+        }
+    }
+    void drawTransparent(){
+    }
+    void shiftPosition(int addX, int addY){
+		x += addX;
+        y += addY ; //命令文を移動
+        if(leftCond != null) leftCond.shiftPosition(addX,addY);
+        else leftHandX += addX;
+        if(rightCond != null) rightCond.shiftPosition(addX,addY);
+        else rightHandX += addX;
+
+        operationBox.shiftPosition(addX, addY);
+        if (nextPlate != null) {
+            nextPlate.shiftPosition(addX, addY);
+        }
+    }
+    void execute(){
+
+    }
+    int leftHandX = 0;
+    int rightHandX = 0;
+    void setGUIPosition(){
+        pWidth = START_MARGIN;
+        int tmpx = x + pWidth;
+
+        if(leftCond != null) tmpx += leftCond.pWidth + MARGIN;
+        else {
+            leftHandX = tmpx;
+            tmpx += SPACE_WIDTH + MARGIN;
+        }
+        operationBox.moveTo(tmpx, y + TXF_POS_Y);
+        tmpx += operationBox.getWidth() + MARGIN;
+
+        if(rightCond != null){
+            rightCond.moveTo(tmpx, y);
+            tmpx += rightCond.pWidth + START_MARGIN;
+        }else{
+            rightHandX = tmpx;
+            tmpx += SPACE_WIDTH + START_MARGIN;
+        }
+        pWidth = tmpx - x;
+    }
+    void insertPlate(Plate p){
+
+        // if(mouseX < x + pWidth/2){
+        //     leftCond = p;
+        // }
+    }
+    String getScript(){
+		StringBuilder result = new StringBuilder();
+		return result.toString();
+	}
 }
