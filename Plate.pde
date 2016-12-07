@@ -564,27 +564,208 @@ class StatementPlate extends Plate {
 class AssignmentPlate extends Plate {
 
     int lshType;
+    MyComboBox typeBox;
     MyTextField variableNameTxf;
     MyTextField valueTxf;
-    private int txfInterval = 10;
+    private final int TXF_INTERVAL = 10;
     private int equalWidth = 24;
     ArrayList<VariablePlate> variablePlates = new ArrayList<VariablePlate>();
 
     AssignmentPlate(int lshType, int x, int y){
         this.x = x;
         this.y = y;
-        this.pWidth = originalStatementWidth;
-        this.pHeight = 30;
-        this.lshType = lshType;
+        this.pWidth     = originalStatementWidth;
+        this.pHeight    = 30;
+        this.lshType    = lshType;
         textSize(24);
-        equalWidth = int(textWidth("="));
-        fillColor = clouds;
+        equalWidth  = int(textWidth("="));
+        fillColor   = clouds;
+        String[] typeItems = {"int", "String", "boolean"};
+        typeBox = new MyComboBox(typeItems, x + MARGIN, y + 5, 70, 20);
+        if(lshType == Enum.INT) typeBox.setItem("int");
+        else if(lshType == Enum.STRING) typeBox.setItem("String");
+        else if(lshType == Enum.BOOLEAN) typeBox.setItem("boolean");
+        else println("undefined type : " + lshType + " in AssignmentPlate class Constructor");
     }
     AssignmentPlate(int lshType, int x, int y, String varName, String value){
         this(lshType, x, y);
-        int totalTxfWidth = txfInterval;
+        int totalTxfWidth = TXF_INTERVAL;
         variableNameTxf = new MyTextField(x + totalTxfWidth, y + txfPosY, varName);
-        totalTxfWidth += variableNameTxf.getWidth() + txfInterval + equalWidth + txfInterval;
+        totalTxfWidth += variableNameTxf.getWidth() + TXF_INTERVAL + equalWidth + TXF_INTERVAL;
+        valueTxf = new MyTextField(x + totalTxfWidth, y + txfPosY, value);
+        totalTxfWidth += valueTxf.getWidth();
+        pWidth += totalTxfWidth;
+        fillColor = getColorByToken(lshType);
+        valueTxf.setFillColor(colorDict.get(lshType));
+        valueTxf.setKind(lshType);
+        setGUIPosition();
+    }
+    void execute(){
+        String name     = variableNameTxf.getText();
+        String content  = valueTxf.getText();
+        Variable v      = variableTable.searchName(name);
+        if(isDebugMode&& step == counter){
+            hasExecuteEnd = true;
+            executingPlate = this;
+        }
+        if(!isDebugMode ||(isDebugMode && step <= counter)){
+            if(v == null){
+                if(lshType == Enum.INT){
+                    int value = getValue(content, valueTxf);
+                    content = "" + value;
+                    variableTable.addVariable(new Variable(lshType, name, value, content));
+                }else if(lshType == Enum.STRING){
+                    String value = getStringValue(content);
+                    content = value;
+                    variableTable.addVariable(new Variable(lshType, name, value, content));
+                }else{
+                    new Exception("erro occurs in AssingPlate execute():型情報がありません => " + lshType);
+                }
+            }else{
+                if(v.kind != lshType) new Exception(); //すでに定義されているエラーを出さないといけない。修正しろよ。
+                if(lshType == Enum.INT){
+                    int value = getValue(content, valueTxf);
+                    content = "" + value;
+                    variableTable.updateVariable(name, content);
+                }else if(lshType == Enum.STRING){
+                    String value = getStringValue(content);
+                    content = value;
+                    variableTable.updateVariable(name, content);
+                }
+            }
+            step++;
+        }
+    }
+    void draw(){
+        if(executingPlate == this){
+            setBorder();
+        }else{
+            noStroke();
+        }
+        textFont(font);
+        fill(fillColor);
+        rect(x, y, pWidth, pHeight, 10);
+        checkGUIChange();
+        drawContents();
+    }
+    void drawContents(){
+        textAlign(LEFT,CENTER);
+        textSize(24);
+        fill(0);
+        text("=", x + typeBox.getWidth() + variableNameTxf.getWidth() + TXF_INTERVAL * 3, y+pHeight/2);
+        typeBox.draw();
+        variableNameTxf.draw();
+        valueTxf.draw();
+    }
+    void drawShadow(){
+        noStroke();
+        fill(0, 0, 0, 180);
+        rect(x+8, y+8, pWidth, pHeight, 10);
+        draw();
+        if (nextPlate != null) {
+            nextPlate.drawShadow();
+        }
+    }
+    private void checkGUIChange(){
+        boolean txfChange = false;
+        if(variableNameTxf.checkChanged() || valueTxf.checkChanged()) txfChange = true;
+        if(typeBox.checkChanged()){
+            int type = 0;
+            String item = typeBox.getItem();
+            if(item.equals("int")){
+                type = Enum.INT;
+            }else if(item.equals("String")){
+                type = Enum.STRING;
+            }else if(item.equals("boolean")){
+                type = Enum.BOOLEAN;
+            }
+            fillColor = getColorByToken(type);
+            txfChange = true;
+        }
+        if(txfChange){
+            isChange = true;
+            setGUIPosition();
+        }
+    }
+    void drawTransparent(){
+    }
+    private void setGUIPosition(){
+        int tmpx = x + TXF_INTERVAL;
+        typeBox.moveTo(tmpx, y + txfPosY);
+        tmpx += typeBox.getWidth() + TXF_INTERVAL;
+        variableNameTxf.moveTo(tmpx, y + txfPosY);
+        tmpx += variableNameTxf.getWidth() + TXF_INTERVAL + equalWidth + TXF_INTERVAL;
+        valueTxf.moveTo(tmpx, y + txfPosY);
+        tmpx += valueTxf.getWidth() + TXF_INTERVAL;
+        pWidth = tmpx - x;
+    }
+    void shiftPosition(int addX, int addY){
+        x += addX;
+        y += addY ; //命令文を移動
+        if (nextPlate != null) nextPlate.shiftPosition(addX, addY);
+        typeBox.shiftPosition(addX, addY);
+        variableNameTxf.shiftPos(addX, addY);
+        valueTxf.shiftPos(addX, addY);
+    }
+    boolean isMouseOver(){
+        if (x <= mouseX && mouseX <= x + pWidth && y <= mouseY && mouseY <= y + pHeight) {
+            return true;
+        }
+        return false;
+    }
+    String getScript(){
+        StringBuilder result = new StringBuilder(getIndent());
+        if(lshType == Enum.INT) {
+            result.append("int ");
+        }else if(lshType == Enum.STRING){
+            result.append("String ");
+        }
+        result.append(variableNameTxf.getText() + " = " + valueTxf.getText() + ";\n");
+        return result.toString();
+    }
+    String getNoIndentScript(){
+        StringBuilder result = new StringBuilder();
+        if(lshType == Enum.INT) {
+            result.append("int ");
+        }else if(lshType == Enum.STRING){
+            result.append("String ");
+        }
+        result.append(variableNameTxf.getText() + " = " + valueTxf.getText() + ";");
+        return result.toString();
+    }
+    public void mouseClicked(MouseEvent e) {
+        if (isMouseOver() && e.getClickCount() >= 2) {  //ダブルクリックの判定を行う
+            plateList.add(new VariablePlate(x + pWidth +  MARGIN, y + pHeight + MARGIN, variableNameTxf.getText(), lshType));
+        }
+    }
+}
+
+
+class AssignmentPlate2 extends Plate {
+
+    AssignmentPlate assignmentPlate;
+    int lshType;
+    MyTextField variableNameTxf;
+    MyTextField valueTxf;
+    private int TXF_INTERVAL = 10;
+    private int equalWidth = 24;
+    ArrayList<VariablePlate> variablePlates = new ArrayList<VariablePlate>();
+
+    AssignmentPlate2(int lshType, int x, int y){
+        this.x = x;
+        this.y = y;
+        this.pWidth     = originalStatementWidth;
+        this.pHeight    = 30;
+        this.lshType    = lshType;
+        textSize(24);
+        equalWidth  = int(textWidth("="));
+        fillColor   = clouds;
+    }
+    AssignmentPlate2(int lshType, int x, int y, String varName, String value){
+        this(lshType, x, y);
+        int totalTxfWidth = TXF_INTERVAL;
+        variableNameTxf = new MyTextField(x + totalTxfWidth, y + txfPosY, varName);
+        totalTxfWidth += variableNameTxf.getWidth() + TXF_INTERVAL + equalWidth + TXF_INTERVAL;
         valueTxf = new MyTextField(x + totalTxfWidth, y + txfPosY, value);
         totalTxfWidth += valueTxf.getWidth();
         pWidth += totalTxfWidth;
@@ -647,7 +828,7 @@ class AssignmentPlate extends Plate {
         textAlign(LEFT,CENTER);
         textSize(24);
         fill(0);
-        text("=", x + variableNameTxf.getWidth() + txfInterval * 2, y+pHeight/2);
+        text("=", x + variableNameTxf.getWidth() + TXF_INTERVAL * 2, y+pHeight/2);
         variableNameTxf.draw();
         valueTxf.draw();
     }
@@ -664,15 +845,15 @@ class AssignmentPlate extends Plate {
     }
     private void setTextFieldPosition(){
         pWidth = originalStatementWidth;
-        int totalTxfWidth = txfInterval;
+        int totalTxfWidth = TXF_INTERVAL;
         variableNameTxf.moveTo(x + totalTxfWidth, y + txfPosY);
-        totalTxfWidth += variableNameTxf.getWidth() + txfInterval + equalWidth + txfInterval;
+        totalTxfWidth += variableNameTxf.getWidth() + TXF_INTERVAL + equalWidth + TXF_INTERVAL;
         valueTxf.moveTo(x + totalTxfWidth, y + txfPosY);
         totalTxfWidth += valueTxf.getWidth();
         pWidth += totalTxfWidth;
     }
     private int getSumTextFieldWidth(){
-        return valueTxf.getWidth() + txfInterval*2 + equalWidth + variableNameTxf.getWidth();
+        return valueTxf.getWidth() + TXF_INTERVAL*2 + equalWidth + variableNameTxf.getWidth();
     }
     void shiftPosition(int addX, int addY){
         x += addX;
@@ -715,7 +896,6 @@ class AssignmentPlate extends Plate {
         }
     }
 }
-
 class ForPlate extends WallPlate{
     private Plate firstPlate;
     private Plate lastPlate;

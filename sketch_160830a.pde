@@ -172,7 +172,6 @@ void draw( ) {
     textAlign(LEFT,TOP);
     text(Math.round(frameRate) + "fps",40,10);
 
-
     if(!hasError){
         if(canSetupExecute){
             fill(255);
@@ -184,6 +183,9 @@ void draw( ) {
             setupPlate.execute();
             canSetupExecute = false;
         }else{
+            fill(255);
+            stroke(0);
+
             step = 0;
             drawPlate.execute();
         }
