@@ -1,0 +1,10 @@
+void setup() {
+    background(255, 255, 255);
+    noStroke();
+    int x = 200;
+    int y = 100;
+    fill(0, 30, 150);
+    rect(x, y, 160, 320);
+    fill(210, 30, 30);
+    rect(x+320, y, 160, 320);
+}

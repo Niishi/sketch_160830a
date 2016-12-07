@@ -108,12 +108,19 @@ public class Lang {
             stmFor();
         }else if(next.kind == Enum.IF){
             stmIf();
+        }else if(next.kind == Enum.WHILE){
+            stmWhile();
         }else if(next.kind == Enum.VOID){
             next = getNextToken();
             if(next.kind == Enum.SETUP){
-                stmSetup();
-            }else if(next.kind == Enum.OTHER){
-                stmMethod();
+                declSetupMethod();
+            }else if(next.kind == Enum.DRAW){
+                declDrawMethod();
+            }else if(next.kind == Enum.MOUSE_PRESSED_METHOD){
+                declMousePressed();
+            }
+            else if(next.kind == Enum.OTHER){
+                declMethod();
             }
         }else if(next.kind == Enum.OTHER){
             String varName = next.word;
@@ -391,7 +398,7 @@ public class Lang {
         next = getNextToken();
         statementList.add(new Statement(Enum.TEXT,arg, argString));
     }
-    void stmSetup()throws Exception{
+    void declSetupMethod()throws Exception{
         next = getNextToken();
         if(next.kind != Enum.LBRACE) unexpectedTokenError(next);
         next = getNextToken();
@@ -406,6 +413,22 @@ public class Lang {
         next = getNextToken();
 
         statementList.add(new Statement(Enum.SETUP_END));
+    }
+    void declDrawMethod() throws Exception{
+        next = getNextToken();
+        if(next.kind != Enum.LBRACE) unexpectedTokenError(next);
+        next = getNextToken();
+        if(next.kind != Enum.RBRACE) unexpectedTokenError(next);
+        next = getNextToken();
+        if(next.kind != Enum.LCBRACE) unexpectedTokenError(next);
+        next = getNextToken();
+        statementList.add(new Statement(Enum.DRAW_METHOD_START));
+        do{
+            STM();
+        }while(next.kind != Enum.RCBRACE);
+        next = getNextToken();
+
+        statementList.add(new Statement(Enum.DRAW));
     }
     void stmEllipse()throws Exception{
         String[] argString = new String[4];
@@ -676,11 +699,27 @@ public class Lang {
         next = getNextToken();
         if (next.kind != Enum.LCBRACE) unexpectedTokenError(next);
         next = getNextToken();
-        // statementList.add(new Statement(Enum.IF_START, cp));
         do{
             STM();
         }while(next.kind != Enum.RCBRACE);
         statementList.add(new Statement(Enum.IF));
+        next = getNextToken();
+    }
+    void stmWhile() throws Exception{
+        next = getNextToken();
+        if (next.kind != Enum.LBRACE) unexpectedTokenError(next);
+        next = getNextToken();
+        statementList.add(new Statement(Enum.WHILE_START));
+        booleanE();
+        changeCodeToConditionPlate();
+        if (next.kind != Enum.RBRACE) unexpectedTokenError(next);
+        next = getNextToken();
+        if (next.kind != Enum.LCBRACE) unexpectedTokenError(next);
+        next = getNextToken();
+        do{
+            STM();
+        }while(next.kind != Enum.RCBRACE);
+        statementList.add(new Statement(Enum.WHILE));
         next = getNextToken();
     }
     void stmAssign(String varName)throws Exception{
@@ -706,7 +745,7 @@ public class Lang {
         println("aaa");
     }
     //関数定義
-    void stmMethod() throws Exception{
+    void declMethod() throws Exception{
         String[] argString = new String[1];
         argString[0] = next.word;   //メソッド名になる
         next = getNextToken();
@@ -755,6 +794,22 @@ public class Lang {
         next = getNextToken();
 
         statementList.add(new Statement(Enum.METHOD));
+    }
+    void declMousePressed() throws Exception{
+        next = getNextToken();
+        if(next.kind != Enum.LBRACE) unexpectedTokenError(next);
+        next = getNextToken();
+        if(next.kind != Enum.RBRACE) unexpectedTokenError(next);
+        next = getNextToken();
+        if(next.kind != Enum.LCBRACE) unexpectedTokenError(next);
+        next = getNextToken();
+        statementList.add(new Statement(Enum.MOUSE_PRESSED_METHOD_START));
+        do{
+            STM();
+        }while(next.kind != Enum.RCBRACE);
+        next = getNextToken();
+
+        statementList.add(new Statement(Enum.MOUSE_PRESSED_METHOD));
     }
     //関数呼び出し
     void stmCallMethod(String methodName) throws Exception{
@@ -902,7 +957,12 @@ public class Lang {
             codeList.add(Enum.MOUSE_X);
             codeList.add(next.word);
             next = getNextToken();
-        } else
+        } else if(next.kind == Enum.TRUE || next.kind == Enum.FALSE){
+            codeList.add(next.kind);
+            codeList.add(next.word);
+            next = getNextToken();
+        }
+        else
             unexpectedTokenError(next);
     }
     String E() throws Exception{
@@ -1013,7 +1073,8 @@ public class Lang {
     WallPlate wallPlate = null;
     WallPlate preWallPlate = null;
     Plate prePlate = null;
-    void statmentToPlate(){//大事:テキストからタイル表現に直す
+    //大事:テキストからタイル表現に直す
+    void statmentToPlate(){
         wallPlateList = new ArrayList<WallPlate>();
         for(int i = 0; i < statementList.size(); i++){
             Statement stm = statementList.get(i);
@@ -1076,17 +1137,39 @@ public class Lang {
                 wallPlate = wallPlate.upperPlate;
             }else if(stm.kind == Enum.IF_START){
                 changeToWallPlate(stm);
-                i++;
-                stm = statementList.get(i);
+                stm = statementList.get(++i);
                 ((IfCondPlate)wallPlate).setConditionPlate(getConditionPlate(stm));
             }else if(stm.kind == Enum.IF){
-                wallPlate = null;
-                prePlate = null;
                 currentTileArrangement[0] -= wallPlate.wallPlateWidth;
-                currentTileArrangement[1] += 100;
+                currentTileArrangement[1] += 70;
+                prePlate = wallPlate;
+                wallPlate = wallPlate.upperPlate;
+            }else if(stm.kind == Enum.WHILE_START){
+                changeToWallPlate(stm);
+                stm = statementList.get(++i);
+                ((WhilePlate)wallPlate).setConditionPlate(getConditionPlate(stm));
+            }else if(stm.kind == Enum.WHILE){
+                currentTileArrangement[0] -= wallPlate.wallPlateWidth;
+                currentTileArrangement[1] += 70;
+                prePlate = wallPlate;
+                wallPlate = wallPlate.upperPlate;
             }else if(stm.kind == Enum.SETUP){
                 setupPlate = (SetupPlate)changeToWallPlate(stm);
             }else if(stm.kind == Enum.SETUP_END){
+                currentTileArrangement[0] -= wallPlate.wallPlateWidth;
+                currentTileArrangement[1] += 100;
+                wallPlate = null;
+                prePlate = null;
+            }else if(stm.kind == Enum.DRAW_METHOD_START){
+                drawPlate = (DrawPlate)changeToWallPlate(stm);
+            }else if(stm.kind == Enum.DRAW){
+                currentTileArrangement[0] -= wallPlate.wallPlateWidth;
+                currentTileArrangement[1] += 100;
+                wallPlate = null;
+                prePlate = null;
+            }else if(stm.kind == Enum.MOUSE_PRESSED_METHOD_START){
+                changeToWallPlate(stm);
+            }else if(stm.kind == Enum.MOUSE_PRESSED_METHOD){
                 currentTileArrangement[0] -= wallPlate.wallPlateWidth;
                 currentTileArrangement[1] += 100;
                 wallPlate = null;
@@ -1150,8 +1233,6 @@ public class Lang {
     Plate getStatementPlate(String statementName, Statement stm){
         return new StatementPlate(statementName, currentTileArrangement[0], currentTileArrangement[1], stm.argString);
     }
-
-
     void changeToAssignmentPlate(int type, String leftHand, String rightHand){
         Plate plate = new AssignmentPlate(type, currentTileArrangement[0], currentTileArrangement[1],leftHand, rightHand);
         updatePlateEnv(plate);
@@ -1184,7 +1265,11 @@ public class Lang {
         else if(stm.kind == Enum.GRATER_THAN) a = ">=";
         else if(stm.kind == Enum.EQUAL) a = "==";
         else if(stm.kind == Enum.NOT_EQUAL) a = "!=";
-        return new ConditionPlate(0,0,a,stm.argString[0],stm.argString[1]);
+        if(!a.equals("")){
+            return new ConditionPlate(0,0,a,stm.argString[0],stm.argString[1]);
+        }else{
+            return new BooleanPlate(0,0,stm.kind);
+        }
     }
     //要修正：複数のbooleanに対応できるようにする
     void changeCodeToConditionPlate() throws Exception{
@@ -1199,6 +1284,9 @@ public class Lang {
                 argString[1] = stack.pop();
                 argString[0] = stack.pop();
                 statementList.add(new Statement(kind,argString));
+            }else if(kind == Enum.TRUE || kind == Enum.FALSE){
+                i++;
+                statementList.add(new Statement(kind));
             }
         }
     }
@@ -1208,6 +1296,10 @@ public class Lang {
         int kind = stm.kind;
         if(kind == Enum.SETUP){
             wplate = new SetupPlate(currentTileArrangement[0], currentTileArrangement[1]);
+        }else if(kind == Enum.DRAW_METHOD_START){
+            wplate = new DrawPlate(currentTileArrangement[0], currentTileArrangement[1]);
+        }else if(kind == Enum.MOUSE_PRESSED_METHOD_START){
+            wplate = new MousePressedPlate(currentTileArrangement[0], currentTileArrangement[1]);
         }else if(kind == Enum.METHOD_START){
             if(stm.argString.length == 1){
                 wplate = new MethodPlate(stm.argString[0], currentTileArrangement[0], currentTileArrangement[1]);
@@ -1218,12 +1310,14 @@ public class Lang {
                 }
                 wplate = new MethodPlate(stm.argString[0], currentTileArrangement[0], currentTileArrangement[1], argNames, stm.argInt);
             }
-        }else if(kind == Enum.IF_START){
+        } else if(kind == Enum.IF_START) {
             wplate = new IfCondPlate(currentTileArrangement[0], currentTileArrangement[1]);
+        } else if(kind == Enum.WHILE_START) {
+            wplate = new WhilePlate(currentTileArrangement[0], currentTileArrangement[1]);
         }
         currentTileArrangement[0] += wplate.wallPlateWidth;
         currentTileArrangement[1] += wplate.wallPlateHeight;
-        if(prePlate != null){
+        if (prePlate != null) {
             prePlate.combinePlate(wplate);
         }
         if(wallPlate != null){

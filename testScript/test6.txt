@@ -1,0 +1,10 @@
+void setup(){
+noStroke();
+int a = 300;
+for(int y = 0; y < 10; y = y + 1;){
+  for(int x = 0; x < 10 ; x = x + 1){
+    fill(10*x, 10+y*10, 99);
+    rect(a + x*20, a + y*20, 10, 10);
+  }
+}
+}

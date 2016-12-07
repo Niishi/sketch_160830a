@@ -15,7 +15,7 @@ color amethyst;
 color silver;
 color concrete;
 color clouds;
-color wetAsphalt;
+color wetAsphalt, schaussPink;
 ArrayList<Tile> blocks = new ArrayList<Tile>();
 
 boolean isColorLight = true;
@@ -1051,6 +1051,8 @@ static class Enum {
     static int LBRACKET     = 34;
     static int RBRACKET     = 35;
     static int NEW          = 36;
+    static int WHILE        = 37;
+    static int WHILE_START  = 38;
 
     //DATA
     //Primitive
@@ -1085,8 +1087,9 @@ static class Enum {
 
     //Input
     //Mouse
-    static int MOUSE_X = 5008;
-    static int MOUSE_Y = 5009;
+    static int MOUSE_PRESSED_METHOD = 5004;
+    static int MOUSE_X              = 5008;
+    static int MOUSE_Y              = 5009;
 
     //実体のないやつら
     static int INT_ARRAY                    = 10000;
@@ -1098,6 +1101,8 @@ static class Enum {
     static int ASSIGN_ARRAY                 = 10006;
     static int INDEX                        = 10007;
     static int METHOD_CALL                  = 10008;
+    static int MOUSE_PRESSED_METHOD_START   = 10009;
+    static int DRAW_METHOD_START            = 10010;
 
 
     static int EOF = Integer.MAX_VALUE;
@@ -1114,6 +1119,8 @@ color getColorByToken(int kind){
         return sunFlower;   //#f1c40f
     }else if(kind == Enum.PLUS || kind == Enum.MINUS ||kind == Enum.MULT ||kind == Enum.DIV){
         return concrete;
+    }else if(kind == Enum.WHILE){
+        return schaussPink;   //#FFA3B2
     }else if(kind == Enum.IF){
         return carrot;
     }else if(kind == Enum.VOID){
@@ -1132,8 +1139,12 @@ color getColorByToken(int kind){
         return belizeHole;  //#2980b9
     }else if(kind == Enum.MOUSE_X || kind == Enum.MOUSE_Y){
         return amethyst;    //#9b59b6
+    }else if(kind == Enum.MOUSE_PRESSED_METHOD){
+        return color(#A092E5);
+    }else if(kind == Enum.TRUE){
+        return color(#0000FF);
     }
-    else if(kind == Enum.YUYA){
+    else if(kind == Enum.YUYA || kind == Enum.FALSE){
         return color(#ff0000);
     }else{
         if(isColorLight){
@@ -1145,6 +1156,7 @@ color getColorByToken(int kind){
 void initColor(){
     pomegranate   = color(#c0392b);
     alizarin      = color(#e74c3c);
+    schaussPink   = color(#FFA3B2);
     pumpkin       = color(#d35400);
     carrot        = color(#e67e22);
     orange        = color(#f39c12);

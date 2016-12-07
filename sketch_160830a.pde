@@ -37,6 +37,7 @@ PImage redFlagIcon, greenFlagIcon, trashBoxIcon, trashBoxOpenIcon;
 MyTextEditor editor;
 PFont font;
 SetupPlate setupPlate;
+DrawPlate drawPlate;
 
 VariableTable variableTable;
 Plate executingPlate;
@@ -55,10 +56,11 @@ boolean isSuperHackerMode = false;
 int counter = -1;
 int step = 0;
 boolean hasExecuteEnd = false;
-
+boolean canSetupExecute = true;
 ArrayList<MyButton> buttonList = new ArrayList<MyButton>();
 
 LogicalOpePlate logi;
+MousePressedPlate mpp;
 void setup(){
     size(1800,900);
     RESULT_WINDOW_WIDTH  = width / 2;
@@ -72,8 +74,11 @@ void setup(){
     font = createFont("Ricty Diminished", 16);
 
     setupPlate = new SetupPlate(initialTileArrangement[0],initialTileArrangement[0]);
+    drawPlate = new DrawPlate(initialTileArrangement[0], initialTileArrangement[1] + setupPlate.pWidth + MARGIN);
     plateList.add(setupPlate);
     wallPlateList.add(setupPlate);
+    plateList.add(drawPlate);
+    wallPlateList.add(drawPlate);
 
     changeTileToScript();
 
@@ -86,7 +91,11 @@ void setup(){
 
     logi = new LogicalOpePlate(200,200);
     plateList.add(logi);
+    mpp = new MousePressedPlate(300,200);
+    plateList.add(mpp);
+    wallPlateList.add(mpp);
     isChange =true;
+
 }
 
 int[] trashBoxPosition;
@@ -109,7 +118,7 @@ void initSound(){
     openWindowSound = new SoundFile(this, "open_window_sound.mp3");
 }
 
-MyButton statementButton, variableButton, ifButton, forButton, methodButton, arrayButton;
+MyButton statementButton, variableButton, ifButton, whileButton, forButton, methodButton, arrayButton;
 
 void initButton(){
     int x = 30;
@@ -120,22 +129,32 @@ void initButton(){
     statementButton.setColor(peterRiver, color(#8AC3E9), color(#1A5F8E));
     buttonList.add(statementButton);
     y += BUTTON_MARGIN;
+
     variableButton = new MyButton("Variable", x, y);
     variableButton.setColor(alizarin, color(#F29E96), color(#A72114));
     buttonList.add(variableButton);
     y += BUTTON_MARGIN;
+
     ifButton = new MyButton("If", x, y);
     ifButton.setColor(carrot, color(#EFB17A), color(#8D4A10));
     buttonList.add(ifButton);
     y += BUTTON_MARGIN;
+
+    whileButton = new MyButton("While", x, y);
+    whileButton.setColor(schaussPink, color(#FFD1D8), color(#FF6B83));
+    buttonList.add(whileButton);
+    y += BUTTON_MARGIN;
+
     forButton = new MyButton("For", x, y);
     forButton.setColor(nephritis, color(#5CDA91), color(#13572F));
     buttonList.add(forButton);
     y += BUTTON_MARGIN;
+
     methodButton = new MyButton("Method", x, y);
     methodButton.setColor(color(78,205,196), color(#9CE2DC), color(#288A82));
     buttonList.add(methodButton);
     y += BUTTON_MARGIN;
+
     arrayButton = new MyButton("Array", x, y);
     arrayButton.setColor(amethyst, color(#C49FD4), color(#603474));
     buttonList.add(arrayButton);
@@ -153,15 +172,23 @@ void draw( ) {
     textAlign(LEFT,TOP);
     text(Math.round(frameRate) + "fps",40,10);
 
-    fill(255);
-    stroke(0);
-    strokeWeight(2);
-    variableTable.init();
+
     if(!hasError){
-        step = 0;
-        hasExecuteEnd = false;
-        setupPlate.execute();
+        if(canSetupExecute){
+            fill(255);
+            stroke(0);
+            strokeWeight(2);
+            variableTable.init();
+            step = 0;
+            hasExecuteEnd = false;
+            setupPlate.execute();
+            canSetupExecute = false;
+        }else{
+            step = 0;
+            drawPlate.execute();
+        }
     }
+
     drawEditor();
     drawPlate();
     drawUI();
@@ -178,7 +205,7 @@ void draw( ) {
         allPlateForDebugmode = new ArrayList<Plate>();
         isChange = false;
     }
-}   //superhackermode
+    }   //superhackermode
 }
 boolean isOK = true;
 void changeTileToScript(){
@@ -262,10 +289,18 @@ void keyPressed(KeyEvent e){
                 if(counter > -1) counter--;
             }
         }
+        if(key == 'f'){
+            plateList.add(new ConditionPlate(100,100));
+            isChange = true;
+        }else if(key == 'd'){
+            plateList.add(new LogicalOpePlate(100,100));
+            isChange = true;
+        }
 
     }
     if (e.isControlDown() && e.getKeyCode() == java.awt.event.KeyEvent.VK_P){     //プログラムの実行
         new Lang(editor.getTokens()).run();
+        canSetupExecute = true;
     }else if (e.isControlDown() && e.getKeyCode() == java.awt.event.KeyEvent.VK_O){     //ライブプログラミングモード
         editor.isLiveProgramming = !editor.isLiveProgramming;
     }else if (e.isControlDown() && e.getKeyCode() == java.awt.event.KeyEvent.VK_I){     //タイルプログラミングモード
@@ -360,11 +395,14 @@ void mouseReleased() {
             return;
         }
         //タイルの上に持っているタイルが乗っているかどうかを判定する
+        boolean isEnter = false;
         for(Plate plate : plateList){
-            if(plate != selectedPlate && plate.isLogicalOpePlate && plate.isMouseOver()) {
+            if(plate != selectedPlate && plate.isLogicalOpePlate && plate.isMouseOver() && selectedPlate.oyaPlate != plate) {
                 ((LogicalOpePlate)plate).insertPlate(selectedPlate);
+                isEnter = true;
             }
         }
+        if(isEnter ) return;
 
         //タイルの下にくっつける
         selectedPlate.checkPlateLink();
@@ -423,6 +461,11 @@ void buttonAction(){
         isChange = true;
     }else if(variableButton.isOver){
         plateList.add(new AssignmentPlate(Enum.INT,100,100,"x","0"));
+        isChange = true;
+    }else if(whileButton.isOver){
+        WhilePlate wp = new WhilePlate(100, 100);
+        plateList.add(wp);
+        wallPlateList.add(wp);
         isChange = true;
     }else if(ifButton.isOver){
         IfCondPlate fp = new IfCondPlate(100,100);

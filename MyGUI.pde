@@ -78,8 +78,6 @@ class MyButton extends MyGUI {
                 text(label, x + w / 2, y + h / 2+h*(1.0/15));
             }
             else if(isOver){
-                // fill(bColor);
-                // rect(x, y+h- h*(1.0/6), w, h*(1.0/6));
                 stroke(0);
                 strokeWeight(2);
                 fill(0);
@@ -272,7 +270,8 @@ class MyComboBox extends MyGUI {
             if (item.equals(name)) {
                 items[i] = items[0];
                 items[0] = name;
-                this.w = int(textWidth(items[0]))+10;
+                textFont(font);
+                this.w = int(textWidth(items[0]))+MARGIN;
             }
             i++;
         }
