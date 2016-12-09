@@ -172,24 +172,27 @@ void draw( ) {
     textAlign(LEFT,TOP);
     text(Math.round(frameRate) + "fps",40,10);
 
-    if(!hasError){
+    // if(!hasError){
         if(canSetupExecute){
             fill(255);
             stroke(0);
-            strokeWeight(2);
+            strokeWeight(1);
             variableTable.init();
             step = 0;
             hasExecuteEnd = false;
             setupPlate.execute();
-            canSetupExecute = false;
+            if(drawPlate != null){
+                canSetupExecute = false;
+            }
         }else{
             fill(255);
             stroke(0);
 
             step = 0;
-            drawPlate.execute();
+            if(drawPlate != null)drawPlate.execute();
+            else canSetupExecute = true;
         }
-    }
+    // }
 
     drawEditor();
     drawPlate();
@@ -267,7 +270,7 @@ void drawUI(){
         image(trashBoxOpenIcon, trashBoxPosition[0], trashBoxPosition[1]-20, 39,60);
     }
     variableTable.display();
-    // if(selectedGUI != null) selectedGUI.draw();
+    if(selectedGUI != null) selectedGUI.draw();
 }
 void updateInitialTileArrangement(){
     if(plateList.size() > 0){
@@ -301,6 +304,8 @@ void keyPressed(KeyEvent e){
 
     }
     if (e.isControlDown() && e.getKeyCode() == java.awt.event.KeyEvent.VK_P){     //プログラムの実行
+        balloonList = new ArrayList<Balloon>();
+        drawPlate = null;
         new Lang(editor.getTokens()).run();
         canSetupExecute = true;
     }else if (e.isControlDown() && e.getKeyCode() == java.awt.event.KeyEvent.VK_O){     //ライブプログラミングモード
@@ -342,7 +347,6 @@ Plate selectedPlate;
 int selectingTime = 0;
 final int SELECTED_TIME = 8;
 void mousePressed() {
-    editor.mousePressed();
     for(int i = 0; i < plateList.size(); i++){
         Plate plate = plateList.get(i);
         if (plate.isMouseOver()) {
@@ -365,6 +369,7 @@ void mousePressed() {
             selectedBlock = block;
         }
     }
+    editor.mousePressed();
     buttonAction();
 }
 void mouseDragged(){
@@ -462,7 +467,7 @@ void buttonAction(){
         plateList.add(new StatementPlate("rect", 100,100, arg));
         isChange = true;
     }else if(variableButton.isOver){
-        plateList.add(new AssignmentPlate(Enum.INT,100,100,"x","0"));
+        plateList.add(new DeclPlate(Enum.INT,100,100,"x","0"));
         isChange = true;
     }else if(whileButton.isOver){
         WhilePlate wp = new WhilePlate(100, 100);
@@ -502,7 +507,9 @@ void deletePlate(Plate p){
         }
         wallPlateList.remove(wp);
         methodPlateList.remove(wp);
+        if(wp.isDrawPlate) drawPlate = null;
     }
     plateList.remove(p);
+    declPlateList.remove(p);
     deletePlate(p.nextPlate);
 }

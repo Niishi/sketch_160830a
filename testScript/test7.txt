@@ -6,18 +6,18 @@ void setup() {
 }
 void draw() {
     rect(x, y, 300, 200);
-    int x = x+vx;
-    int y = y+vy;
+    x = x+vx;
+    y = y+vy;
     if ( x < 0 ) {
-        int vx = -1*vx;
+        vx = -1*vx;
     }
     if ( y > 650 ) {
-        int vy = -1*vy;
+        vy = -1*vy;
     }
     if ( x > 600 ) {
-        int vx = -1*vx;
+        vx = -1*vx;
     }
     if ( y < 0 ) {
-        int vy = -1*vy;
+        vy = -1*vy;
     }
 }

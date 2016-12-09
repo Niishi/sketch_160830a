@@ -1,0 +1,6 @@
+void setup() {
+    int i = 1;
+    if ( i > 0 ) {
+        background(100, 0, 0);
+    }
+}

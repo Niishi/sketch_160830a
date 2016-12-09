@@ -64,6 +64,20 @@ class Balloon {
     private String text;
     private color fillColor;
     private color textColor;
+    Balloon(String text, MyGUI gui){
+        this.text = text;
+        this.x = gui.x + MARGIN;
+        this.y = gui.y + gui.h + MARGIN;
+        this.targetX = gui.x + gui.w/2;
+        this.targetY = gui.y + gui.h/2;
+        fillColor = clouds;
+        textColor = color(#ff0000);
+        textFont(font);
+        this.w = int(textWidth(text)) + MARGIN * 2;
+        this.h = text.split("\n").length * textSize + MARGIN * 2;
+        balloonList.add(this);
+        gui.balloon = this;
+    }
     Balloon(String text, int x, int y, int targetX, int targetY){
         this.text = text;
         this.x = x;
@@ -204,15 +218,15 @@ class VariableTable {
     public Variable get(int i){
         return vars.get(i);
     }
-    public Variable searchName(String name){
+    public Variable searchName(String name)throws UndefinedVariableException{
         for(Variable v : vars){
             if(v.name.equals(name)){
                 return v;
             }
         }
-        return null;
+        throw new UndefinedVariableException(name);
     }
-    public void updateVariable(String name, String content){
+    public void updateVariable(String name, String content) throws UndefinedVariableException{
         searchName(name).content = content;
     }
 

@@ -157,8 +157,7 @@ public class Lang {
         }
     }
     void unexpectedTokenError(Token token) throws Exception{
-        println("ErrorToken : " + token.word);
-        throw new Exception();
+        throw new IncorrectSyntaxException(token);
     }
     void DECL() throws Exception { // DECL -> INT OTHER SEMI
         //この時点では変数名のところまで読み込まれている
@@ -654,39 +653,21 @@ public class Lang {
         next = getNextToken();
         if (next.kind != Enum.LBRACE) unexpectedTokenError(next);
         next = getNextToken();
-        //要検討！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！
-        if(next.kind == Enum.NUM){
-            String[] argString = new String[1];
-            argString[0] = next.word;
-
-            next = getNextToken();
-            if (next.kind != Enum.RBRACE) unexpectedTokenError(next);
-            next = getNextToken();
-            if (next.kind != Enum.LCBRACE) unexpectedTokenError(next);
-            next = getNextToken();
-            statementList.add(new Statement(Enum.FOR_START));
-            do{
-                STM();
-            }while(next.kind != Enum.RCBRACE);
-            next = getNextToken();
-            statementList.add(new Statement(Enum.FOR, argString));
-        } else {
-            statementList.add(new Statement(Enum.FOR_START));
+        statementList.add(new Statement(Enum.FOR_START));
+        STM();
+        booleanE();
+        changeCodeToConditionPlate();
+        next = getNextToken();
+        STM();
+        if(next.kind != Enum.RBRACE) unexpectedTokenError(next);
+        next = getNextToken();
+        if (next.kind != Enum.LCBRACE) unexpectedTokenError(next);
+        next = getNextToken();
+        do{
             STM();
-            booleanE();
-            changeCodeToConditionPlate();
-            next = getNextToken();
-            STM();
-            if(next.kind != Enum.RBRACE) unexpectedTokenError(next);
-            next = getNextToken();
-            if (next.kind != Enum.LCBRACE) unexpectedTokenError(next);
-            next = getNextToken();
-            do{
-                STM();
-            }while(next.kind != Enum.RCBRACE);
-            next = getNextToken();
-            statementList.add(new Statement(Enum.FOR));
-        }
+        }while(next.kind != Enum.RCBRACE);
+        next = getNextToken();
+        statementList.add(new Statement(Enum.FOR));
     }
     void stmIf()throws Exception{
         next = getNextToken();
@@ -723,8 +704,6 @@ public class Lang {
         next = getNextToken();
     }
     void stmAssign(String varName)throws Exception{
-        //要修正さあああああああああああああああああああああああああああああああああああああああああああああああさあああああああああああああああ
-
         String result = "";
         while(true){
             try{
@@ -741,8 +720,7 @@ public class Lang {
         String[] argString = new String[2];
         argString[0] = varName;
         argString[1] = result;
-        statementList.add(new Statement(Enum.ASSIGN, argString));
-        println("aaa");
+        statementList.add(new Statement(Enum.DECL, argString));
     }
     //関数定義
     void declMethod() throws Exception{
@@ -899,11 +877,20 @@ public class Lang {
             }else if(token.kind == Enum.NUM){
                 sb.append(token.word);
             }else if(token.kind == Enum.OTHER){
-                sb.append(variableTable.searchName(token.word).getVarValue());
+                try{
+                    Variable v = fetchVariableByName(token.word);
+                    sb.append(v.getVarValue());
+                }catch(UndefinedVariableException e){
+                    println("undefinedVariable : " + token.word);
+                }
             }else if(token.kind == Enum.STRING_ARRAY){
                 String[] words = token.word.split(",");
-                CompositeVariable cv = (CompositeVariable)variableTable.searchName(words[0]);
-                sb.append(cv.get(Integer.parseInt(words[1])));
+                try{
+                    CompositeVariable cv = (CompositeVariable)variableTable.searchName(words[0]);
+                    sb.append(cv.get(Integer.parseInt(words[1])));
+                }catch(UndefinedVariableException e){
+                    println("undefinedVariable : " + words[0]);
+                }
             }
         }
         return sb.toString();
@@ -972,12 +959,12 @@ public class Lang {
             if (next.kind == Enum.PLUS) {
                 sb.append(next.word);
                 next = getNextToken();
-                T();
+                sb.append(T());
                 addCode("AD 0 0");
             } else if (next.kind == Enum.MINUS) {
                 sb.append(next.word);
                 next = getNextToken();
-                T();
+                sb.append(T());
                 addCode("SUB 0 0");
             } else {
                 break;
@@ -1047,7 +1034,15 @@ public class Lang {
             sb.append(next.word);
             addCode("MOUSE_Y 0 0");
             next = getNextToken();
-        } else if (next.kind == Enum.MINUS) {
+        } else if(next.kind == Enum.HEIGHT){
+            sb.append(next.word);
+            addCode("HEIGHT 0 0");
+            next = getNextToken();
+        } else if(next.kind == Enum.WIDTH){
+            sb.append(next.word);
+            addCode("WIDTH 0 0");
+            next = getNextToken();
+        }else if (next.kind == Enum.MINUS) {
             sb.append(next.word);
             next = getNextToken();
             if (next.kind == Enum.NUM){
@@ -1063,9 +1058,10 @@ public class Lang {
             unexpectedTokenError(next);
         return sb.toString();
     }
-    //要修正
-    int getAdress(String name) throws Exception{
-        return variableTable.indexOf(name);
+    int getAdress(String name) throws UndefinedVariableException{
+        int index = variableTable.indexOf(name);
+        if(index == -1) throw new UndefinedVariableException(name);
+        return index;
     }
     void addCode(String st) {
         result.append(st).append("\n");
@@ -1094,7 +1090,18 @@ public class Lang {
                 Plate p = new ArrayPlate_SyntaxSugar(currentTileArrangement[0], currentTileArrangement[1], stm.kind, stm.argString[0], contents);
                 updatePlateEnv(p);
             }else if(stm.kind == Enum.ASSIGN){
-                Plate plate = new AssignmentPlate(Enum.INT, currentTileArrangement[0], currentTileArrangement[1],stm.argString[0], stm.argString[1]);
+                Plate plate = new DeclPlate(Enum.INT, currentTileArrangement[0], currentTileArrangement[1],stm.argString[0], stm.argString[1]);
+                plateList.add(plate);
+                currentTileArrangement[1] += plate.pHeight;
+                if(prePlate != null){
+                    prePlate.combinePlate(plate);
+                }
+                if(wallPlate != null){
+                    plate.combineWallPlate(wallPlate);
+                }
+                prePlate = plate;
+            }else if(stm.kind == Enum.DECL){
+                Plate plate = new AssignmentPlate(currentTileArrangement[0], currentTileArrangement[1], stm.argString[0], stm.argString[1]);
                 plateList.add(plate);
                 currentTileArrangement[1] += plate.pHeight;
                 if(prePlate != null){
@@ -1205,8 +1212,11 @@ public class Lang {
             }
             return new ArrayPlate_SyntaxSugar(currentTileArrangement[0], currentTileArrangement[1], stm.kind, stm.argString[0], contents);
         }else if(stm.kind == Enum.ASSIGN){
-            return new AssignmentPlate(Enum.INT, currentTileArrangement[0], currentTileArrangement[1],stm.argString[0], stm.argString[1]);
-        }else if(stm.kind == Enum.RECT){
+            return new DeclPlate(Enum.INT, currentTileArrangement[0], currentTileArrangement[1],stm.argString[0], stm.argString[1]);
+        }else if(stm.kind == Enum.DECL){
+            return new AssignmentPlate(currentTileArrangement[0], currentTileArrangement[1], stm.argString[0], stm.argString[1]);
+        }
+        else if(stm.kind == Enum.RECT){
             return getStatementPlate("rect",stm);
         }else if(stm.kind == Enum.ELLIPSE){
             return getStatementPlate("ellipse",stm);
@@ -1222,19 +1232,20 @@ public class Lang {
             return getStatementPlate("textSize", stm);
         }else if(stm.kind == Enum.LINE){
             return getStatementPlate("line", stm);
-        }else{
-            new Exception("Error!!!!!!!!!!!!!!!getPlateByStatement() method");
+        }
+        else{
+            println("Error!!!!!!!!!!!!!!!getPlateByStatement() method");
             return null;
         }
     }
     Plate getAssignmentPlate(int type, String leftHand, String rightHand){
-        return new AssignmentPlate(type, currentTileArrangement[0], currentTileArrangement[1],leftHand, rightHand);
+        return new DeclPlate(type, currentTileArrangement[0], currentTileArrangement[1],leftHand, rightHand);
     }
     Plate getStatementPlate(String statementName, Statement stm){
         return new StatementPlate(statementName, currentTileArrangement[0], currentTileArrangement[1], stm.argString);
     }
     void changeToAssignmentPlate(int type, String leftHand, String rightHand){
-        Plate plate = new AssignmentPlate(type, currentTileArrangement[0], currentTileArrangement[1],leftHand, rightHand);
+        Plate plate = new DeclPlate(type, currentTileArrangement[0], currentTileArrangement[1],leftHand, rightHand);
         updatePlateEnv(plate);
     }
     void changeToStatementPlate(String statementName, Statement stm){

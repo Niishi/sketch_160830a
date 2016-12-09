@@ -781,7 +781,7 @@ class MyTextEditor {
     }
 
     void mousePressed(){
-        if(isCursorOnEditor()){
+        if(isCursorOnEditor() && selectedPlate == null){
             isFocus = true;
         }else{
             isFocus = false;
@@ -1091,6 +1091,10 @@ static class Enum {
     static int MOUSE_X              = 5008;
     static int MOUSE_Y              = 5009;
 
+    //Environment
+    static int HEIGHT   = 6010;
+    static int WIDTH    = 6018;
+
     //実体のないやつら
     static int INT_ARRAY                    = 10000;
     static int STRING_ARRAY                 = 10001;
@@ -1103,6 +1107,7 @@ static class Enum {
     static int METHOD_CALL                  = 10008;
     static int MOUSE_PRESSED_METHOD_START   = 10009;
     static int DRAW_METHOD_START            = 10010;
+    static int DECL                         = 10011;
 
 
     static int EOF = Integer.MAX_VALUE;
@@ -1137,7 +1142,7 @@ color getColorByToken(int kind){
         return silver;
     }else if(kind == Enum.BOOLEAN || kind == Enum.BOOLEAN_ARRAY){
         return belizeHole;  //#2980b9
-    }else if(kind == Enum.MOUSE_X || kind == Enum.MOUSE_Y){
+    }else if(kind == Enum.MOUSE_X || kind == Enum.MOUSE_Y || kind == Enum.HEIGHT || kind == Enum.WIDTH){
         return amethyst;    //#9b59b6
     }else if(kind == Enum.MOUSE_PRESSED_METHOD){
         return color(#A092E5);

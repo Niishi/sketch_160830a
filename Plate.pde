@@ -24,9 +24,12 @@ public abstract class Plate {
     Plate nextPlate;  //下にある操作
     FuncPlate belongPlate;
     protected color fillColor;
-    boolean isWallPlate = false;
-    boolean isVariablePlate = false;
-    boolean isLogicalOpePlate = false;
+    boolean isWallPlate         = false;
+    boolean isVariablePlate     = false;
+    boolean isLogicalOpePlate   = false;
+    boolean isDrawPlate         = false;
+
+    Balloon balloon;
 
     public abstract void draw();
     public abstract void drawShadow();
@@ -150,25 +153,7 @@ public abstract class Plate {
     void decrementIndent(){
         indent -= indentVolume;
     }
-    int getValue(String text, MyGUI gui){
-        try{
-            return new Lang(editor.getTokens(text)).getValue();
-        }catch(IndexOutOfBoundsException e){
-            balloonList.remove(gui.balloon);
-            gui.balloon = new Balloon("undefined variable!", gui.x + gui.w, gui.y + gui.h + MARGIN, gui.x + gui.w / 2, gui.y + gui.h/2);
-            return 0;
-        }catch(Exception e){
-            return 0;
-        }
-    }
-    String getStringValue(String text){
-        try{
-            return new Lang(editor.getTokens(text)).getStringValue();
-        }catch(Exception e){
-            println("error occurs in getStringValue() method");
-            return "";
-        }
-    }
+
     public void mouseClicked(MouseEvent e) {
         //特に何もしない。必要ならサブクラスで定義してね
     }
@@ -177,6 +162,66 @@ public abstract class Plate {
     }
     void moveTo(int x, int y){
         this.x = x; this.y = y;
+    }
+}
+int getValue(String text, MyGUI gui){
+    try{
+        return new Lang(editor.getTokens(text)).getValue();
+    }catch(UndefinedVariableException e){
+        balloonList.remove(gui.balloon);
+        gui.balloon = new Balloon("UndefinedVariableException : \n variable name : " + e.varName, gui);
+        hasError = true;
+        return 0;
+    }catch(IndexOutOfBoundsException e){
+        balloonList.remove(gui.balloon);
+        gui.balloon = new Balloon("IndexOutOfBoundsException : \n" + e.getMessage(), gui);
+        println(e.getStackTrace());
+        hasError = true;
+        return 0;
+    }catch(ArithmeticException e){
+        balloonList.remove(gui.balloon);
+        gui.balloon = new Balloon("ArithmeticException:\n" + e.getMessage(), gui);
+        hasError = true;
+        return 0;
+    }catch(Exception e){
+        balloonList.remove(gui.balloon);
+        gui.balloon = new Balloon("", gui);
+        hasError = true;
+        return 0;
+    }
+}
+String getStringValue(MyTextField txf){
+    try{
+        return new Lang(editor.getTokens(txf.getText())).getStringValue();
+    }catch(IndexOutOfBoundsException e){
+        txf.balloon = new Balloon("IndexOutOfBoundsException:\n"+e.getMessage(),txf);
+        hasError = true;
+        return "";
+    }catch(Exception e){
+        txf.balloon = new Balloon("Error", txf);
+        hasError = true;
+        return "";
+    }
+}
+Variable fetchVariableByName(String name) throws UndefinedVariableException{
+    return variableTable.searchName(name);
+}
+Variable fetchVariableByName(MyTextField txf){
+    try{
+        return fetchVariableByName(txf.getText());
+    }catch(UndefinedVariableException e){
+        return null;
+    }
+}
+void updateVariableValue(String name, String content) throws UndefinedVariableException {
+    variableTable.updateVariable(name, content);
+}
+void updateVariableValue(MyTextField txf, String content){
+    try{
+        updateVariableValue(txf.getText(), content);
+    }catch(UndefinedVariableException e){
+        txf.balloon = new Balloon("UndefinedVariableException:\n" + e.varName, txf);
+        hasError = true;
     }
 }
 public abstract class WallPlate extends Plate {
@@ -390,7 +435,7 @@ class StatementPlate extends Plate {
                     int[] arg = getArg(textFields.size());
                     println(arg[0]);
                 }else if(comboboxItem.equals("text")){
-                    String text = getStringValue(textFields.get(0).getText());
+                    String text = getStringValue(textFields.get(0));
                     int[] arg = getArg(1,2);
                     text(text, arg[0], arg[1]);
                 }else if(comboboxItem.equals("textSize")){
@@ -561,7 +606,14 @@ class StatementPlate extends Plate {
     }
 }
 
-class AssignmentPlate extends Plate {
+ArrayList<DeclPlate> declPlateList = new ArrayList<DeclPlate>();
+DeclPlate getDeclPlateByName(String name){
+    for(DeclPlate mp : declPlateList){
+        if(mp.getVarName().equals(name)) return mp;
+    }
+    return null;
+}
+class DeclPlate extends Plate {
 
     int lshType;
     MyComboBox typeBox;
@@ -571,7 +623,7 @@ class AssignmentPlate extends Plate {
     private int equalWidth = 24;
     ArrayList<VariablePlate> variablePlates = new ArrayList<VariablePlate>();
 
-    AssignmentPlate(int lshType, int x, int y){
+    DeclPlate(int lshType, int x, int y){
         this.x = x;
         this.y = y;
         this.pWidth     = originalStatementWidth;
@@ -585,9 +637,11 @@ class AssignmentPlate extends Plate {
         if(lshType == Enum.INT) typeBox.setItem("int");
         else if(lshType == Enum.STRING) typeBox.setItem("String");
         else if(lshType == Enum.BOOLEAN) typeBox.setItem("boolean");
-        else println("undefined type : " + lshType + " in AssignmentPlate class Constructor");
+        else println("undefined type : " + lshType + " in DeclPlate class Constructor");
+
+        declPlateList.add(this);
     }
-    AssignmentPlate(int lshType, int x, int y, String varName, String value){
+    DeclPlate(int lshType, int x, int y, String varName, String value){
         this(lshType, x, y);
         int totalTxfWidth = TXF_INTERVAL;
         variableNameTxf = new MyTextField(x + totalTxfWidth, y + txfPosY, varName);
@@ -603,7 +657,7 @@ class AssignmentPlate extends Plate {
     void execute(){
         String name     = variableNameTxf.getText();
         String content  = valueTxf.getText();
-        Variable v      = variableTable.searchName(name);
+        Variable v      = fetchVariableByName(variableNameTxf);
         if(isDebugMode&& step == counter){
             hasExecuteEnd = true;
             executingPlate = this;
@@ -615,22 +669,23 @@ class AssignmentPlate extends Plate {
                     content = "" + value;
                     variableTable.addVariable(new Variable(lshType, name, value, content));
                 }else if(lshType == Enum.STRING){
-                    String value = getStringValue(content);
+                    String value = getStringValue(valueTxf);
                     content = value;
                     variableTable.addVariable(new Variable(lshType, name, value, content));
                 }else{
-                    new Exception("erro occurs in AssingPlate execute():型情報がありません => " + lshType);
+                    println("error occurs in AssingPlate execute():型情報がありません => " + lshType);
+                    new Exception("error occurs in AssingPlate execute():型情報がありません => " + lshType);
                 }
             }else{
                 if(v.kind != lshType) new Exception(); //すでに定義されているエラーを出さないといけない。修正しろよ。
                 if(lshType == Enum.INT){
                     int value = getValue(content, valueTxf);
                     content = "" + value;
-                    variableTable.updateVariable(name, content);
+                    updateVariableValue(variableNameTxf, content);
                 }else if(lshType == Enum.STRING){
-                    String value = getStringValue(content);
+                    String value = getStringValue(valueTxf);
                     content = value;
-                    variableTable.updateVariable(name, content);
+                    updateVariableValue(variableNameTxf, content);
                 }
             }
             step++;
@@ -713,6 +768,22 @@ class AssignmentPlate extends Plate {
         }
         return false;
     }
+    String getVarName(){
+        return variableNameTxf.getText();
+    }
+    int getType(){
+        String item = typeBox.getItem();
+        if(item.equals("int")){
+            return Enum.INT;
+        }else if(item.equals("String")){
+            return Enum.STRING;
+        }else if(item.equals("boolean")){
+            return Enum.BOOLEAN;
+        }else{
+            println("undefined type. declPlate getType");
+            return Enum.OTHER;
+        }
+    }
     String getScript(){
         StringBuilder result = new StringBuilder(getIndent());
         if(lshType == Enum.INT) {
@@ -735,77 +806,88 @@ class AssignmentPlate extends Plate {
     }
     public void mouseClicked(MouseEvent e) {
         if (isMouseOver() && e.getClickCount() >= 2) {  //ダブルクリックの判定を行う
-            plateList.add(new VariablePlate(x + pWidth +  MARGIN, y + pHeight + MARGIN, variableNameTxf.getText(), lshType));
+            plateList.add(new AssignmentPlate(this, x + pWidth + MARGIN, y + pHeight + MARGIN));
+            // plateList.add(new VariablePlate(x + pWidth +  MARGIN, y + pHeight + MARGIN, variableNameTxf.getText(), lshType));
         }
     }
 }
 
 
-class AssignmentPlate2 extends Plate {
+class AssignmentPlate extends Plate {
 
-    AssignmentPlate assignmentPlate;
-    int lshType;
-    MyTextField variableNameTxf;
+    DeclPlate declPlate;
+    String name;
     MyTextField valueTxf;
     private int TXF_INTERVAL = 10;
     private int equalWidth = 24;
     ArrayList<VariablePlate> variablePlates = new ArrayList<VariablePlate>();
+    Balloon balloon;
 
-    AssignmentPlate2(int lshType, int x, int y){
+    AssignmentPlate(int x, int y, String name, String value){
         this.x = x;
         this.y = y;
         this.pWidth     = originalStatementWidth;
         this.pHeight    = 30;
-        this.lshType    = lshType;
-        textSize(24);
-        equalWidth  = int(textWidth("="));
-        fillColor   = clouds;
+        this.name = name;
+        valueTxf = new MyTextField(x , y + txfPosY, value);
+        declPlate = getDeclPlateByName(name);
+        setGUIPosition();
     }
-    AssignmentPlate2(int lshType, int x, int y, String varName, String value){
-        this(lshType, x, y);
-        int totalTxfWidth = TXF_INTERVAL;
-        variableNameTxf = new MyTextField(x + totalTxfWidth, y + txfPosY, varName);
-        totalTxfWidth += variableNameTxf.getWidth() + TXF_INTERVAL + equalWidth + TXF_INTERVAL;
-        valueTxf = new MyTextField(x + totalTxfWidth, y + txfPosY, value);
-        totalTxfWidth += valueTxf.getWidth();
-        pWidth += totalTxfWidth;
-        fillColor = getColorByToken(lshType);
-        valueTxf.setFillColor(colorDict.get(lshType));
-        valueTxf.setKind(lshType);
+
+    AssignmentPlate(DeclPlate declPlate, int x, int y){
+        this.x = x;
+        this.y = y;
+        this.pWidth     = originalStatementWidth;
+        this.pHeight    = 30;
+        this.declPlate  = declPlate;
+        textSize(24);
+        name = declPlate.getVarName();
+        fillColor = declPlate.fillColor;
+        equalWidth  = int(textWidth("="));
+        valueTxf = new MyTextField(x , y + txfPosY, "");
+        setGUIPosition();
     }
     void execute(){
-        String name     = variableNameTxf.getText();
         String content  = valueTxf.getText();
-        Variable v      = variableTable.searchName(name);
+        Variable v = null;
+        try{
+            v = fetchVariableByName(name);
+        }catch(UndefinedVariableException e){
+            balloon = new Balloon("UndefinedVariableException:\n" + name, x + MARGIN, y + MARGIN, x + pWidth/2, y + pHeight/2);
+            hasError = true;
+            return;
+        }
+        int type = declPlate.getType();
         if(isDebugMode&& step == counter){
             hasExecuteEnd = true;
             executingPlate = this;
         }
         if(!isDebugMode ||(isDebugMode && step <= counter)){
-            if(v == null){
-                if(lshType == Enum.INT){
-                    int value = getValue(content, valueTxf);
-                    content = "" + value;
-                    variableTable.addVariable(new Variable(lshType, name, value, content));
-                }else if(lshType == Enum.STRING){
-                    String value = getStringValue(content);
-                    content = value;
-                    variableTable.addVariable(new Variable(lshType, name, value, content));
-                }else{
-                    new Exception("erro occurs in AssingPlate execute():型情報がありません => " + lshType);
+            if(v.kind != type) new Exception(); //すでに定義されているエラーを出さないといけない。修正しろよ。
+            if(type == Enum.INT){
+                int value = getValue(content, valueTxf);
+                content = "" + value;
+                try{
+                    updateVariableValue(name, content);
+                }catch(UndefinedVariableException e){
+                    println("eeee");
+                    balloon = new Balloon("UndefinedVariableException:\n" + name, x + MARGIN, y + MARGIN, x + pWidth/2, y + pHeight/2);
+                    hasError = true;
+                    return;
                 }
-            }else{
-                if(v.kind != lshType) new Exception(); //すでに定義されているエラーを出さないといけない。修正しろよ。
-                if(lshType == Enum.INT){
-                    int value = getValue(content, valueTxf);
-                    content = "" + value;
-                    variableTable.updateVariable(name, content);
-                }else if(lshType == Enum.STRING){
-                    String value = getStringValue(content);
-                    content = value;
-                    variableTable.updateVariable(name, content);
+            }else if(type == Enum.STRING){
+                String value = getStringValue(valueTxf);
+                content = value;
+                try{
+                    updateVariableValue(name, content);
+                }catch(UndefinedVariableException e){
+                    println("ffff");
+                    balloon = new Balloon("UndefinedVariableException:\n" + name, x + MARGIN, y + MARGIN, x + pWidth/2, y + pHeight/2);
+                    hasError = true;
+                    return;
                 }
             }
+
             step++;
         }
     }
@@ -815,21 +897,19 @@ class AssignmentPlate2 extends Plate {
         }else{
             noStroke();
         }
-        if(variableNameTxf.checkChanged() || valueTxf.checkChanged()){
-            isChange = true;
-            setTextFieldPosition();
-        }
+
         textFont(font);
         fill(fillColor);
         rect(x, y, pWidth, pHeight, 10);
+        checkGUIChange();
         drawContents();
     }
     void drawContents(){
         textAlign(LEFT,CENTER);
-        textSize(24);
+        textFont(font);
         fill(0);
-        text("=", x + variableNameTxf.getWidth() + TXF_INTERVAL * 2, y+pHeight/2);
-        variableNameTxf.draw();
+        text(name, x + TXF_INTERVAL, y + pHeight/2);
+        text("=", x + int(textWidth(name)) + TXF_INTERVAL * 2, y+pHeight/2);
         valueTxf.draw();
     }
     void drawShadow(){
@@ -843,17 +923,24 @@ class AssignmentPlate2 extends Plate {
     }
     void drawTransparent(){
     }
-    private void setTextFieldPosition(){
-        pWidth = originalStatementWidth;
-        int totalTxfWidth = TXF_INTERVAL;
-        variableNameTxf.moveTo(x + totalTxfWidth, y + txfPosY);
-        totalTxfWidth += variableNameTxf.getWidth() + TXF_INTERVAL + equalWidth + TXF_INTERVAL;
-        valueTxf.moveTo(x + totalTxfWidth, y + txfPosY);
-        totalTxfWidth += valueTxf.getWidth();
-        pWidth += totalTxfWidth;
+    private void checkGUIChange(){
+        if(declPlate != null){
+            name = declPlate.getVarName();
+            fillColor = declPlate.fillColor;
+        }else if(balloon == null){
+            declPlate = getDeclPlateByName(name);
+            balloon = new Balloon(name + " is undefined.", x + MARGIN, y + MARGIN, x + pWidth/2, y + pHeight/2);
+        }
+        if(valueTxf.checkChanged()){
+            isChange = true;
+        }
+        setGUIPosition();
     }
-    private int getSumTextFieldWidth(){
-        return valueTxf.getWidth() + TXF_INTERVAL*2 + equalWidth + variableNameTxf.getWidth();
+    private void setGUIPosition(){
+        int tmpx = x + TXF_INTERVAL + int(textWidth(name)) + TXF_INTERVAL + equalWidth + TXF_INTERVAL;
+        valueTxf.moveTo(tmpx, y + txfPosY);
+        tmpx += valueTxf.getWidth() + TXF_INTERVAL;
+        pWidth = tmpx - x;
     }
     void shiftPosition(int addX, int addY){
         x += addX;
@@ -861,7 +948,6 @@ class AssignmentPlate2 extends Plate {
         if (nextPlate != null) {
             nextPlate.shiftPosition(addX, addY);
         }
-        variableNameTxf.shiftPos(addX, addY);
         valueTxf.shiftPos(addX, addY);
     }
     boolean isMouseOver(){
@@ -872,28 +958,18 @@ class AssignmentPlate2 extends Plate {
     }
     String getScript(){
         StringBuilder result = new StringBuilder(getIndent());
-        if(lshType == Enum.INT) {
-            result.append("int ");
-        }else if(lshType == Enum.STRING){
-            result.append("String ");
-        }
-        result.append(variableNameTxf.getText() + " = " + valueTxf.getText() + ";\n");
+        result.append(name + " = " + valueTxf.getText() + ";\n");
         return result.toString();
     }
     String getNoIndentScript(){
         StringBuilder result = new StringBuilder();
-        if(lshType == Enum.INT) {
-            result.append("int ");
-        }else if(lshType == Enum.STRING){
-            result.append("String ");
-        }
-        result.append(variableNameTxf.getText() + " = " + valueTxf.getText() + ";");
+        result.append(name + " = " + valueTxf.getText() + ";");
         return result.toString();
     }
     public void mouseClicked(MouseEvent e) {
-        if (isMouseOver() && e.getClickCount() >= 2) {  //ダブルクリックの判定を行う
-            plateList.add(new VariablePlate(x + pWidth +  MARGIN, y + pHeight + MARGIN, variableNameTxf.getText(), lshType));
-        }
+        // if (isMouseOver() && e.getClickCount() >= 2) {  //ダブルクリックの判定を行う
+        //     plateList.add(new VariablePlate(x + pWidth +  MARGIN, y + pHeight + MARGIN, variableNameTxf.getText(), lshType));
+        // }
     }
 }
 class ForPlate extends WallPlate{
@@ -911,8 +987,8 @@ class ForPlate extends WallPlate{
         wallPlateHeightBottom = 30;
         fillColor = color(179, 204, 87);
         //命令の指定がないので文を適当に挿入する
-        firstPlate  = new AssignmentPlate(Enum.INT, x + wallPlateWidth + MARGIN, y + MARGIN/2, "i", "0");
-        lastPlate   = new AssignmentPlate(Enum.INT, x + wallPlateWidth + MARGIN, y + pHeight - wallPlateHeightBottom, "i", "i+1");
+        firstPlate  = new DeclPlate(Enum.INT, x + wallPlateWidth + MARGIN, y + MARGIN/2, "i", "0");
+        lastPlate   = new DeclPlate(Enum.INT, x + wallPlateWidth + MARGIN, y + pHeight - wallPlateHeightBottom, "i", "i+1");
         cond        = new ConditionPlate(x + wallPlateWidth + MARGIN, y + 30 + MARGIN, "<", "i", "10");
     }
     ForPlate(int x, int y, Plate firstPlate, Plate lastPlate, ConditionPlate cond){
@@ -2026,8 +2102,6 @@ class WhilePlate extends WallPlate {
     }
 }
 
-
-
 class ReturnPlate extends Plate {
     MyTextField txf;
     private final int MARGIN = 10;
@@ -2192,7 +2266,7 @@ class ArrayPlate_Original extends  ArrayPlate {
         if(!isDebugMode ||(isDebugMode && step <= counter)){
             String name     = nameTxf.getText();
             String content  = lengthTxf.getText();
-            Variable v      = variableTable.searchName(name);
+            Variable v      = fetchVariableByName(nameTxf);
             int type        = getType();
             int length      = getValue(content, lengthTxf);
             if(v == null){
@@ -2207,7 +2281,7 @@ class ArrayPlate_Original extends  ArrayPlate {
                 }
             }else{
                 if(v.kind != type) new Exception(); //すでに定義されているエラーを出さないといけない。修正しろよ。
-                ((CompositeVariable)variableTable.searchName(name)).initArray(length);
+                ((CompositeVariable)fetchVariableByName(nameTxf)).initArray(length);
             }
             step++;
         }
@@ -2332,7 +2406,7 @@ class ArrayPlate_SyntaxSugar extends ArrayPlate {
         }
         if(!isDebugMode ||(isDebugMode && step <= counter)){
             String name     = nameTxf.getText();
-            Variable v      = variableTable.searchName(name);
+            Variable v      = fetchVariableByName(nameTxf);
             int type        = getType();
             if(v == null){
                 if(type == Enum.INT_ARRAY){
@@ -2344,7 +2418,7 @@ class ArrayPlate_SyntaxSugar extends ArrayPlate {
                 }else if(type == Enum.STRING_ARRAY){
                     ArrayList<String> contents = new ArrayList<String>();
                     for(int i = 0; i < elements.size(); i++){
-                        contents.add(getStringValue(elements.get(i).getText()));
+                        contents.add(getStringValue(elements.get(i)));
                     }
                     variableTable.addVariable(new CompositeVariable(type, name, contents));
                 }else if(type == Enum.BOOLEAN_ARRAY){
@@ -2364,7 +2438,7 @@ class ArrayPlate_SyntaxSugar extends ArrayPlate {
                 }else if(type == Enum.STRING_ARRAY){
                     ArrayList<String> contents = new ArrayList<String>();
                     for(int i = 0; i < elements.size(); i++){
-                        contents.add(getStringValue(elements.get(i).getText()));
+                        contents.add(getStringValue(elements.get(i)));
                     }
                     ((CompositeVariable)v).setElements(contents);
                 }else if(type == Enum.BOOLEAN_ARRAY){
@@ -2541,14 +2615,21 @@ class ArrayAssignPlate extends Plate {
             int index      = getValue(indexTxf.getText(), indexTxf);
             int type       = arrayPlate.getType();
             String content = contentTxf.getText();
-            Variable v     = (CompositeVariable)(variableTable.searchName(name));
-            if(v.kind != type) new Exception(); //すでに定義されているエラーを出さないといけない。修正しろよ。
-            CompositeVariable array = (CompositeVariable)variableTable.searchName(name);
+            CompositeVariable array;
+            try{
+                array = (CompositeVariable)(fetchVariableByName(name));
+            }catch(UndefinedVariableException e){
+                println("ggg");
+                balloon = new Balloon("UndefinedVariableException:\n" + name, x + MARGIN, y + MARGIN, x + pWidth/2, y + pHeight/2);
+                hasError = true;
+                return;
+            }
+            if(array.kind != type) new Exception(); //すでに定義されているエラーを出さないといけない。修正しろよ。
             if(type == Enum.INT_ARRAY){
                 int value = getValue(content, contentTxf);
                 array.set(index, value);
             }else if(type == Enum.STRING_ARRAY){
-                String value = getStringValue(content);
+                String value = getStringValue(contentTxf);
                 array.set(index, value);
             }else{
                 new Exception("erro occurs in AssingPlate execute():型情報がありません => " + type);
@@ -2735,8 +2816,9 @@ class DrawPlate extends WallPlate {
         this.y = y;
         pWidth = 180;
         pHeight = 60+40;
-        isWallPlate = true;
         fillColor = getColorByToken(Enum.DRAW);
+        isWallPlate = true;
+        isDrawPlate = true;
     }
     void execute(){
         // if(counter == -1) executingPlate = this;

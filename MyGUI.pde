@@ -415,7 +415,7 @@ class MyTextField extends MyGUI {
     void moveTo(int x, int y) { //目的地を引数にもつ
         this.x = x;
         this.y = y;
-        if(balloon != null) balloon.setPosition(x + w + MARGIN, y + h + MARGIN, x + w/2, y + h/2);
+        // if(balloon != null) balloon.setPosition(x + w + MARGIN, y + h + MARGIN, x + w/2, y + h/2);
     }
     void shiftPos(int addX, int addY){ //現在位置からの動かす距離を引数にもつ
         this.x += addX;
@@ -439,10 +439,6 @@ class MyTextField extends MyGUI {
             balloonList.remove(balloon);
             balloon = null;
         }
-        else{
-            balloonList.remove(balloon);
-            balloon = new Balloon("Type is not correct.\n You must input " + type, x + w, y + h + MARGIN, x + w/2, y + h/2);
-        }
     }
     private boolean checkInt(){
         try{
@@ -451,7 +447,19 @@ class MyTextField extends MyGUI {
             l.E();
             hasError = false;
             return true;
+        }catch(UndefinedVariableException e){
+            balloonList.remove(balloon);
+            balloon = new Balloon("UndefinedVariableException", this);
+            hasError = true;
+            return false;
+        }catch(ArithmeticException e){
+            balloonList.remove(balloon);
+            balloon = new Balloon("ArithmeticException:\n" + e.getMessage(), this);
+            hasError = true;
+            return false;
         }catch(Exception e){
+            balloonList.remove(balloon);
+            balloon = new Balloon("Type is not correct.\n You must input int", this);
             hasError = true;
             return false;
         }

@@ -42,6 +42,10 @@ public class HsmAssembler {
             code[pc+2] = mouseX;
         }else if("MOUSE_Y".equals(op)){
             code[pc+2] = mouseY;
+        }else if("HEIGHT".equals(op)){
+            code[pc+2] = RESULT_WINDOW_HEIGHT;
+        }else if("WIDTH".equals(op)){
+            code[pc+2] = RESULT_WINDOW_WIDTH;
         }
         if ("LDC".equals(op)) {
             code[pc] = LDC;
@@ -82,6 +86,12 @@ public class HsmAssembler {
             if ("MOUSE_Y".equals(op)) {
             code[pc] = 0;
         } else
+            if ("HEIGHT".equals(op)) {
+            code[pc] = 0;
+        } else
+            if ("WIDTH".equals(op)) {
+            code[pc] = 0;
+        } else
             if ("STV".equals(op)) {
             code[pc] = STV;
         } else
@@ -110,6 +120,8 @@ final int WRI = 65;
 
 final int MOUSE_X = 70;
 final int MOUSE_Y = 71;
+final int HEIGHT = 72;
+final int WIDTH = 73;
 
 final int HLT = 255;
 
@@ -155,6 +167,10 @@ loop:
             case MOUSE_X:
                 break;
             case MOUSE_Y:
+                break;
+            case WIDTH:
+                break;
+            case HEIGHT:
                 break;
             case ML:
                 s[sp-1] = s[sp] * s[sp-1];

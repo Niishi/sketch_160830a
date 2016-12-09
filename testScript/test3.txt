@@ -1,5 +1,6 @@
 void setup() {
     String[] a = {"apple", "orange", "grape"};
-    fill(0,0,0);
-    text(a[0], 100,100);
+    textSize(32);
+    fill(0, 0, 0);
+    text(a[2], 300, 100);
 }
