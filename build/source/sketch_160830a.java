@@ -43,9 +43,9 @@ public class sketch_160830a extends PApplet {
 */
 SoundFile errorSound, dumpSound, correctSound, putSound, nextStepSound, openWindowSound;
 
-ArrayList<Plate> plateList = new ArrayList<Plate>();
-ArrayList<WallPlate> wallPlateList = new ArrayList<WallPlate>();
-ArrayList<Method> methodList = new ArrayList<Method>();
+ArrayList<Plate> plateList          = new ArrayList<Plate>();
+ArrayList<WallPlate> wallPlateList  = new ArrayList<WallPlate>();
+ArrayList<Method> methodList        = new ArrayList<Method>();
 
 ArrayList<Tile> allBlocks = new ArrayList<Tile>();    //\u30d6\u30ed\u30c3\u30af\u306e\u60c5\u5831\u3092\u4fdd\u6301\u3059\u308b\u5834\u6240
 
@@ -63,7 +63,7 @@ VariableTable variableTable;
 Plate executingPlate;
 WallPlate executingWallPlate;
 int gradationR = 0;
-boolean isDebugMode = true;
+boolean isDebugMode = false;
 ArrayList<Plate> allPlateForDebugmode = new ArrayList<Plate>();
 ArrayList<MethodPlate> methodPlateList = new ArrayList<MethodPlate>();
 int debugIndex = 0;
@@ -77,6 +77,7 @@ int counter = -1;
 int step = 0;
 boolean hasExecuteEnd = false;
 boolean canSetupExecute = true;
+boolean isFillExisted = false;
 ArrayList<MyButton> buttonList = new ArrayList<MyButton>();
 
 LogicalOpePlate logi;
@@ -103,17 +104,18 @@ public void setup(){
     changeTileToScript();
 
     initArgTypeList();
+    initArgValueList();
     colorDict.put(Enum.INT, 0xffF3AFA9);  //#FADDDA
     colorDict.put(Enum.STRING, 0xffB9EECF);   //#E6F9EE
     colorDict.put(Enum.BOOLEAN, 0xff69B0DD);   //#E6F1F9
 
     executingPlate = setupPlate;
 
-    logi = new LogicalOpePlate(200,200);
-    plateList.add(logi);
-    mpp = new MousePressedPlate(300,200);
-    plateList.add(mpp);
-    wallPlateList.add(mpp);
+    // logi = new LogicalOpePlate(200,200);
+    // plateList.add(logi);
+    // mpp = new MousePressedPlate(300,200);
+    // plateList.add(mpp);
+    // wallPlateList.add(mpp);
     isChange =true;
 
 }
@@ -192,27 +194,7 @@ public void draw( ) {
     textAlign(LEFT,TOP);
     text(Math.round(frameRate) + "fps",40,10);
 
-    // if(!hasError){
-        if(canSetupExecute){
-            fill(255);
-            stroke(0);
-            strokeWeight(1);
-            variableTable.init();
-            step = 0;
-            hasExecuteEnd = false;
-            setupPlate.execute();
-            if(drawPlate != null){
-                canSetupExecute = false;
-            }
-        }else{
-            fill(255);
-            stroke(0);
-
-            step = 0;
-            if(drawPlate != null)drawPlate.execute();
-            else canSetupExecute = true;
-        }
-    // }
+    executePlate();
 
     drawEditor();
     drawPlate();
@@ -230,7 +212,30 @@ public void draw( ) {
         allPlateForDebugmode = new ArrayList<Plate>();
         isChange = false;
     }
+
     }   //superhackermode
+}
+public void executePlate(){
+    // if(!hasError){
+        if(canSetupExecute){
+            fill(255);
+            stroke(0);
+            strokeWeight(1);
+            variableTable.init();
+            step = 0;
+            isFillExisted = false;
+            hasExecuteEnd = false;
+            setupPlate.execute();
+            if(drawPlate != null) canSetupExecute = false;
+        }else{
+            fill(255);
+            stroke(0);
+
+            step = 0;
+            if(drawPlate != null)drawPlate.execute();
+            else canSetupExecute = true;
+        }
+    // }
 }
 boolean isOK = true;
 public void changeTileToScript(){
@@ -314,16 +319,17 @@ public void keyPressed(KeyEvent e){
                 if(counter > -1) counter--;
             }
         }
-        if(key == 'f'){
-            plateList.add(new ConditionPlate(100,100));
-            isChange = true;
-        }else if(key == 'd'){
-            plateList.add(new LogicalOpePlate(100,100));
-            isChange = true;
-        }
+        // if(key == 'f'){
+        //     plateList.add(new ConditionPlate(100,100));
+        //     isChange = true;
+        // }else if(key == 'd'){
+        //     plateList.add(new LogicalOpePlate(100,100));
+        //     isChange = true;
+        // }
 
     }
     if (e.isControlDown() && e.getKeyCode() == java.awt.event.KeyEvent.VK_P){     //\u30d7\u30ed\u30b0\u30e9\u30e0\u306e\u5b9f\u884c
+        selectedGUI = null;
         balloonList = new ArrayList<Balloon>();
         drawPlate = null;
         new Lang(editor.getTokens()).run();
@@ -365,7 +371,9 @@ public boolean isOut(Plate p){
 Tile selectedBlock;
 Plate selectedPlate;
 int selectingTime = 0;
+int mousePressedTime = 0;
 final int SELECTED_TIME = 8;
+final int GUI_SELECTED_MAX_TIME = 8;
 public void mousePressed() {
     for(int i = 0; i < plateList.size(); i++){
         Plate plate = plateList.get(i);
@@ -375,7 +383,7 @@ public void mousePressed() {
         }
     }
     for(Balloon b : balloonList){
-        if(b.isMouseOver()) b.putForward();
+        if(b.isMouseOver()) balloonList.remove(b);
         break;
     }
     for(MyGUI gui : guiList){
@@ -403,6 +411,7 @@ public void mouseDragged(){
         int addY = mouseY - pmouseY;
         selectedBlock.move(addX, addY);
     }
+    mousePressedTime++;
 }
 public void mouseReleased() {
     if(selectedPlate != null){
@@ -446,6 +455,7 @@ public void mouseReleased() {
         if(nearestPlate != null) {
             if(selectedPlate.upperPlate != nearestPlate){
                 selectedPlate.combineWallPlate(nearestPlate);
+                if(nearestPlate == setupPlate) canSetupExecute = true;
             }
             selectedPlate.goIntoWallPlate(nearestPlate);
         }
@@ -453,6 +463,7 @@ public void mouseReleased() {
         if(isTrashBoxNear()){
             dumpSound.play();
             deletePlate(selectedPlate);
+            selectedGUI = null;
             hadPlate = null;
         }else {
             if(selectingTime > SELECTED_TIME){
@@ -464,6 +475,7 @@ public void mouseReleased() {
     selectedPlate = null;
     selectedBlock = null;
     selectingTime = 0;
+    mousePressedTime = 0;
 }
 public void mouseWheel(MouseEvent e){
     editor.mouseWheel(e);
@@ -483,34 +495,34 @@ public boolean isTrashBoxNear(){
 }
 public void buttonAction(){
     if(statementButton.isOver) {
-        String[] arg = {"100","100","300","200"};
-        plateList.add(new StatementPlate("rect", 100,100, arg));
+        String[] arg = {"300","100","300","200"};
+        plateList.add(new StatementPlate("rect", 200,100, arg));
         isChange = true;
     }else if(variableButton.isOver){
-        plateList.add(new DeclPlate(Enum.INT,100,100,"x","0"));
+        plateList.add(new DeclPlate(Enum.INT,200,100,"x","0"));
         isChange = true;
     }else if(whileButton.isOver){
-        WhilePlate wp = new WhilePlate(100, 100);
+        WhilePlate wp = new WhilePlate(200, 100);
         plateList.add(wp);
         wallPlateList.add(wp);
         isChange = true;
     }else if(ifButton.isOver){
-        IfCondPlate fp = new IfCondPlate(100,100);
+        IfCondPlate fp = new IfCondPlate(200,100);
         plateList.add(fp);
         wallPlateList.add(fp);
         isChange = true;
     }else if(forButton.isOver){
-        ForPlate l = new ForPlate(100,100);
+        ForPlate l = new ForPlate(200,100);
         wallPlateList.add(l);
         plateList.add(l);
         isChange = true;
     }else if(methodButton.isOver){
-        MethodPlate mp = new MethodPlate(100,100);
+        MethodPlate mp = new MethodPlate(200,100);
         plateList.add(mp);
         wallPlateList.add(mp);
         isChange = true;
     }else if(arrayButton.isOver){
-        ArrayPlate_Original ap = new ArrayPlate_Original(100,100,"a","10",Enum.INT_ARRAY);
+        ArrayPlate_Original ap = new ArrayPlate_Original(200, 100, "a", "10",Enum.INT_ARRAY);
         plateList.add(ap);
         isChange = true;
     }
@@ -1225,6 +1237,10 @@ class MyComboBox extends MyGUI {
         stroke(0);
         strokeWeight(2);
         textAlign(LEFT, TOP);
+        drawContent();
+        actionByMouseEvent();
+    }
+    private void drawContent(){
         int itemMaxWidth = getMaxWidth() + MARGIN;
         if (!isSelected) {  //\u9078\u629e\u3055\u308c\u3066\u3044\u306a\u3051\u308c\u3070
             fill(255);      //\u4e00\u884c\u5206\u3057\u304b\u8868\u793a\u3057\u306a\u3044
@@ -1243,7 +1259,10 @@ class MyComboBox extends MyGUI {
                 text(items[i], x + MARGIN/2, y + h*i);
             }
         }
-        if (mousePressed && isSelected) {
+    }
+    private void actionByMouseEvent(){
+        int itemMaxWidth = getMaxWidth() + MARGIN;
+        if (mousePressed && mousePressedTime < GUI_SELECTED_MAX_TIME && isSelected) {
             if (x < mouseX && mouseX <= x + itemMaxWidth && y < mouseY && mouseY < y + h * items.length) {
                 String a = getSelectedItem();  //\u9078\u629e\u3055\u308c\u305f\u9805\u76ee\u3092\u53d6\u308a\u51fa\u3057\u3066\u304d\u3066
                 int selectIndex = getSelectedIndex();  //\u305d\u306e\u30a4\u30f3\u30c7\u30c3\u30af\u30b9\u3082\u53d6\u308a\u51fa\u3059
@@ -1259,9 +1278,10 @@ class MyComboBox extends MyGUI {
             mousePressed =false;
         }
         //\u30b3\u30f3\u30dc\u30dc\u30c3\u30af\u30b9\u304c\u305d\u3082\u305d\u3082\u9078\u629e\u3055\u308c\u3066\u3044\u306a\u304b\u3063\u305f\u3089
-        if (mousePressed  && !isSelected && isMouseOver()) {
+        if (mousePressed  && mousePressedTime < GUI_SELECTED_MAX_TIME && !isSelected && isMouseOver()) {
             isSelected = true;  //\u30b3\u30f3\u30dc\u30dc\u30c3\u30af\u30b9\u3092\u9078\u629e\u72b6\u614b\u306b\u3059\u308b
             mousePressed = false;
+            selectedGUI = this;
         }
     }
 
@@ -2971,6 +2991,11 @@ public int getValue(String text, MyGUI gui){
         gui.balloon = new Balloon("ArithmeticException:\n" + e.getMessage(), gui);
         hasError = true;
         return 0;
+    }catch(IncorrectSyntaxException e){
+        balloonList.remove(gui.balloon);
+        gui.balloon = new Balloon("IncorrectSyntaxException", gui);
+        hasError = true;
+        return 0;
     }catch(Exception e){
         balloonList.remove(gui.balloon);
         gui.balloon = new Balloon("", gui);
@@ -2982,10 +3007,12 @@ public String getStringValue(MyTextField txf){
     try{
         return new Lang(editor.getTokens(txf.getText())).getStringValue();
     }catch(IndexOutOfBoundsException e){
+        balloonList.remove(txf.balloon);
         txf.balloon = new Balloon("IndexOutOfBoundsException:\n"+e.getMessage(),txf);
         hasError = true;
         return "";
     }catch(Exception e){
+        balloonList.remove(txf.balloon);
         txf.balloon = new Balloon("Error", txf);
         hasError = true;
         return "";
@@ -3088,9 +3115,8 @@ public abstract class WallPlate extends Plate {
         }
         int addY = -plate.pHeight;
         resize(addX, addY);
-        if(plate.nextPlate != null){
-            cancelLink(plate.nextPlate);
-        }
+        if(plate.nextPlate != null) cancelLink(plate.nextPlate);
+        if(this == setupPlate) canSetupExecute = true;
     }
     private int getMaxWidthInLoopOpes(){
         int maxWidth = 0;
@@ -3131,6 +3157,18 @@ public void initArgTypeList(){
     argTypeList.put("textSize", d);
     Integer[] e = {Enum.STRING, Enum.INT, Enum.INT};
     argTypeList.put("text", e);
+}
+HashMap<String, String[]> argValueList;
+public void initArgValueList(){
+    argValueList = new HashMap<String, String[]>();
+    argValueList.put("rect", new String[]{"400","200","300","200"});
+    argValueList.put("ellipse", new String[]{"400","200","150","150"});
+    argValueList.put("line", new String[]{"300","200","500","400"});
+    argValueList.put("fill", new String[]{"46", "204", "113"});
+    argValueList.put("background", new String[]{"52", "152", "219"});
+    argValueList.put("stroke", new String[]{"243", "156", "18"});
+    argValueList.put("textSize", new String[]{"32"});
+    argValueList.put("text", new String[]{"\"text\"", "300","300"});
 }
 class StatementPlate extends Plate {
     private MyComboBox comboBox;  //\u547d\u4ee4\u306e\u9078\u629e\u6b04
@@ -3203,12 +3241,15 @@ class StatementPlate extends Plate {
         if(!isDebugMode ||(isDebugMode && step <= counter)){
             try{
                 if(comboboxItem.equals("rect")){
+                    if(!isFillExisted) fill(255);
                     int[] arg = getArg(textFields.size());
                     rect(arg[0],arg[1],arg[2],arg[3]);
                 }else if(comboboxItem.equals("ellipse")){
+                    if(!isFillExisted) fill(255);
                     int[] arg = getArg(textFields.size());
                     ellipse(arg[0], arg[1], arg[2], arg[3]);
                 }else if(comboboxItem.equals("fill")){
+                    isFillExisted = true;
                     int[] arg = getArg(textFields.size());
                     fill(arg[0], arg[1], arg[2]);
                 }else if(comboboxItem.equals("noStroke")){
@@ -3223,6 +3264,7 @@ class StatementPlate extends Plate {
                     int[] arg = getArg(textFields.size());
                     println(arg[0]);
                 }else if(comboboxItem.equals("text")){
+                    if(!isFillExisted) fill(0);
                     String text = getStringValue(textFields.get(0));
                     int[] arg = getArg(1,2);
                     text(text, arg[0], arg[1]);
@@ -3253,6 +3295,7 @@ class StatementPlate extends Plate {
             pWidth += txfWidth + txfInterval;
         }
     }
+    //\u3053\u306e\u30bf\u30a4\u30eb\u5168\u4f53\u306e\u4e2d\u8eab\u3092\u8a2d\u5b9a\u3059\u308b\u3068\u304d\u306b\u7528\u3044\u308b
     private void setTextFieldContents(String[] textFieldContents){
         for(int i = 0; i < textFieldContents.length; i++){
             textFields.get(i).setText(textFieldContents[i]);
@@ -3296,28 +3339,37 @@ class StatementPlate extends Plate {
 
         if(item.equals("rect")){
             setTextField(4, argTypeList.get("rect"));
+            setTextFieldContents(argValueList.get("rect"));
         }else if(item.equals("ellipse")){
             setTextField(4,argTypeList.get("ellipse"));
+            setTextFieldContents(argValueList.get("ellipse"));
         }else if(item.equals("fill")){
             setTextField(3, argTypeList.get("fill"));
+            setTextFieldContents(argValueList.get("fill"));
         }else if(item.equals("background")){
             setTextField(3, argTypeList.get("background"));
+            setTextFieldContents(argValueList.get("background"));
         }else if(item.equals("println")){
             setTextField(1, argTypeList.get("println"));
         }else if(item.equals("text")){
             setTextField(3, argTypeList.get("text"));
+            setTextFieldContents(argValueList.get("text"));
         }else if(item.equals("textSize")){
             setTextField(1, argTypeList.get("textSize"));
+            setTextFieldContents(argValueList.get("textSize"));
         }else if(item.equals("line")){
             setTextField(4, argTypeList.get("line"));
+            setTextFieldContents(argValueList.get("line"));
         }else if(item.equals("noStroke")){
             setTextField(0, new Integer[0]);    //new Integer[0]\u306f\u9069\u5f53\u306b\u57cb\u3081\u305f\u3060\u3051\u3002\u306a\u305c\u306a\u3089\u7b2c1\u5f15\u6570\u304c0\u3067\u5f15\u6570\u304c\u306a\u3044\u304b\u3089
         }else if(item.equals("stroke")){
             setTextField(3, argTypeList.get("stroke"));
+            setTextFieldContents(argValueList.get("stroke"));
         }
         else {
             new Exception();
         }
+        setTextFieldPosition();
     }
     public void drawShadow() {
         noStroke();
@@ -5424,7 +5476,6 @@ class ArrayAssignPlate extends Plate {
             }
             step++;
         }
-
     }
     public void setGUIPosition(){
         textFont(font);
@@ -6705,7 +6756,11 @@ public class Lang {
             codeList.add(Enum.MOUSE_X);
             codeList.add(next.word);
             next = getNextToken();
-        } else if(next.kind == Enum.TRUE || next.kind == Enum.FALSE){
+        } else if(next.kind == Enum.WIDTH || next.kind == Enum.HEIGHT){
+            codeList.add(next.kind);
+            codeList.add(next.word);
+            next = getNextToken();
+        }else if(next.kind == Enum.TRUE || next.kind == Enum.FALSE){
             codeList.add(next.kind);
             codeList.add(next.word);
             next = getNextToken();
@@ -6784,7 +6839,11 @@ public class Lang {
                 addCode("LDA " + index + " " + getAdress(varName));
             }else{
                 index--;
-                addCode("LDV 0 " + getAdress(varName));
+                try{
+                    addCode("LDV 0 " + getAdress(varName));
+                }catch(UndefinedVariableException e){
+                    addCode("LDV 0 " + 0);
+                }
             }
             next = getNextToken();
         } else if(next.kind == Enum.MOUSE_X){
@@ -7048,7 +7107,7 @@ public class Lang {
         Stack<String> stack = new Stack<String>();
         for(int i = 0; i < codeList.size(); i++){
             int kind = (Integer)codeList.get(i);
-            if(kind == Enum.NUM || kind == Enum.OTHER || kind == Enum.MOUSE_X){
+            if(kind == Enum.NUM || kind == Enum.OTHER || kind == Enum.MOUSE_X || kind == Enum.WIDTH || kind == Enum.HEIGHT){
                 i++;
                 stack.push((String)codeList.get(i));
             }else if(kind == Enum.LESS || kind == Enum.LESS_THAN || kind == Enum.GRATER || kind == Enum.GRATER_THAN || kind == Enum.EQUAL || kind == Enum.NOT_EQUAL){

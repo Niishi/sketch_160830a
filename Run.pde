@@ -944,7 +944,11 @@ public class Lang {
             codeList.add(Enum.MOUSE_X);
             codeList.add(next.word);
             next = getNextToken();
-        } else if(next.kind == Enum.TRUE || next.kind == Enum.FALSE){
+        } else if(next.kind == Enum.WIDTH || next.kind == Enum.HEIGHT){
+            codeList.add(next.kind);
+            codeList.add(next.word);
+            next = getNextToken();
+        }else if(next.kind == Enum.TRUE || next.kind == Enum.FALSE){
             codeList.add(next.kind);
             codeList.add(next.word);
             next = getNextToken();
@@ -1023,7 +1027,11 @@ public class Lang {
                 addCode("LDA " + index + " " + getAdress(varName));
             }else{
                 index--;
-                addCode("LDV 0 " + getAdress(varName));
+                try{
+                    addCode("LDV 0 " + getAdress(varName));
+                }catch(UndefinedVariableException e){
+                    addCode("LDV 0 " + 0);
+                }
             }
             next = getNextToken();
         } else if(next.kind == Enum.MOUSE_X){
@@ -1287,7 +1295,7 @@ public class Lang {
         Stack<String> stack = new Stack<String>();
         for(int i = 0; i < codeList.size(); i++){
             int kind = (Integer)codeList.get(i);
-            if(kind == Enum.NUM || kind == Enum.OTHER || kind == Enum.MOUSE_X){
+            if(kind == Enum.NUM || kind == Enum.OTHER || kind == Enum.MOUSE_X || kind == Enum.WIDTH || kind == Enum.HEIGHT){
                 i++;
                 stack.push((String)codeList.get(i));
             }else if(kind == Enum.LESS || kind == Enum.LESS_THAN || kind == Enum.GRATER || kind == Enum.GRATER_THAN || kind == Enum.EQUAL || kind == Enum.NOT_EQUAL){

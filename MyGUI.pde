@@ -168,6 +168,10 @@ class MyComboBox extends MyGUI {
         stroke(0);
         strokeWeight(2);
         textAlign(LEFT, TOP);
+        drawContent();
+        actionByMouseEvent();
+    }
+    private void drawContent(){
         int itemMaxWidth = getMaxWidth() + MARGIN;
         if (!isSelected) {  //選択されていなければ
             fill(255);      //一行分しか表示しない
@@ -186,7 +190,10 @@ class MyComboBox extends MyGUI {
                 text(items[i], x + MARGIN/2, y + h*i);
             }
         }
-        if (mousePressed && isSelected) {
+    }
+    private void actionByMouseEvent(){
+        int itemMaxWidth = getMaxWidth() + MARGIN;
+        if (mousePressed && mousePressedTime < GUI_SELECTED_MAX_TIME && isSelected) {
             if (x < mouseX && mouseX <= x + itemMaxWidth && y < mouseY && mouseY < y + h * items.length) {
                 String a = getSelectedItem();  //選択された項目を取り出してきて
                 int selectIndex = getSelectedIndex();  //そのインデックスも取り出す
@@ -202,9 +209,10 @@ class MyComboBox extends MyGUI {
             mousePressed =false;
         }
         //コンボボックスがそもそも選択されていなかったら
-        if (mousePressed  && !isSelected && isMouseOver()) {
+        if (mousePressed  && mousePressedTime < GUI_SELECTED_MAX_TIME && !isSelected && isMouseOver()) {
             isSelected = true;  //コンボボックスを選択状態にする
             mousePressed = false;
+            selectedGUI = this;
         }
     }
 

@@ -183,6 +183,11 @@ int getValue(String text, MyGUI gui){
         gui.balloon = new Balloon("ArithmeticException:\n" + e.getMessage(), gui);
         hasError = true;
         return 0;
+    }catch(IncorrectSyntaxException e){
+        balloonList.remove(gui.balloon);
+        gui.balloon = new Balloon("IncorrectSyntaxException", gui);
+        hasError = true;
+        return 0;
     }catch(Exception e){
         balloonList.remove(gui.balloon);
         gui.balloon = new Balloon("", gui);
@@ -194,10 +199,12 @@ String getStringValue(MyTextField txf){
     try{
         return new Lang(editor.getTokens(txf.getText())).getStringValue();
     }catch(IndexOutOfBoundsException e){
+        balloonList.remove(txf.balloon);
         txf.balloon = new Balloon("IndexOutOfBoundsException:\n"+e.getMessage(),txf);
         hasError = true;
         return "";
     }catch(Exception e){
+        balloonList.remove(txf.balloon);
         txf.balloon = new Balloon("Error", txf);
         hasError = true;
         return "";
@@ -300,9 +307,8 @@ public abstract class WallPlate extends Plate {
         }
         int addY = -plate.pHeight;
         resize(addX, addY);
-        if(plate.nextPlate != null){
-            cancelLink(plate.nextPlate);
-        }
+        if(plate.nextPlate != null) cancelLink(plate.nextPlate);
+        if(this == setupPlate) canSetupExecute = true;
     }
     private int getMaxWidthInLoopOpes(){
         int maxWidth = 0;
@@ -343,6 +349,18 @@ void initArgTypeList(){
     argTypeList.put("textSize", d);
     Integer[] e = {Enum.STRING, Enum.INT, Enum.INT};
     argTypeList.put("text", e);
+}
+HashMap<String, String[]> argValueList;
+void initArgValueList(){
+    argValueList = new HashMap<String, String[]>();
+    argValueList.put("rect", new String[]{"400","200","300","200"});
+    argValueList.put("ellipse", new String[]{"400","200","150","150"});
+    argValueList.put("line", new String[]{"300","200","500","400"});
+    argValueList.put("fill", new String[]{"46", "204", "113"});
+    argValueList.put("background", new String[]{"52", "152", "219"});
+    argValueList.put("stroke", new String[]{"243", "156", "18"});
+    argValueList.put("textSize", new String[]{"32"});
+    argValueList.put("text", new String[]{"\"text\"", "300","300"});
 }
 class StatementPlate extends Plate {
     private MyComboBox comboBox;  //命令の選択欄
@@ -415,12 +433,15 @@ class StatementPlate extends Plate {
         if(!isDebugMode ||(isDebugMode && step <= counter)){
             try{
                 if(comboboxItem.equals("rect")){
+                    if(!isFillExisted) fill(255);
                     int[] arg = getArg(textFields.size());
                     rect(arg[0],arg[1],arg[2],arg[3]);
                 }else if(comboboxItem.equals("ellipse")){
+                    if(!isFillExisted) fill(255);
                     int[] arg = getArg(textFields.size());
                     ellipse(arg[0], arg[1], arg[2], arg[3]);
                 }else if(comboboxItem.equals("fill")){
+                    isFillExisted = true;
                     int[] arg = getArg(textFields.size());
                     fill(arg[0], arg[1], arg[2]);
                 }else if(comboboxItem.equals("noStroke")){
@@ -435,6 +456,7 @@ class StatementPlate extends Plate {
                     int[] arg = getArg(textFields.size());
                     println(arg[0]);
                 }else if(comboboxItem.equals("text")){
+                    if(!isFillExisted) fill(0);
                     String text = getStringValue(textFields.get(0));
                     int[] arg = getArg(1,2);
                     text(text, arg[0], arg[1]);
@@ -465,6 +487,7 @@ class StatementPlate extends Plate {
             pWidth += txfWidth + txfInterval;
         }
     }
+    //このタイル全体の中身を設定するときに用いる
     private void setTextFieldContents(String[] textFieldContents){
         for(int i = 0; i < textFieldContents.length; i++){
             textFields.get(i).setText(textFieldContents[i]);
@@ -508,28 +531,37 @@ class StatementPlate extends Plate {
 
         if(item.equals("rect")){
             setTextField(4, argTypeList.get("rect"));
+            setTextFieldContents(argValueList.get("rect"));
         }else if(item.equals("ellipse")){
             setTextField(4,argTypeList.get("ellipse"));
+            setTextFieldContents(argValueList.get("ellipse"));
         }else if(item.equals("fill")){
             setTextField(3, argTypeList.get("fill"));
+            setTextFieldContents(argValueList.get("fill"));
         }else if(item.equals("background")){
             setTextField(3, argTypeList.get("background"));
+            setTextFieldContents(argValueList.get("background"));
         }else if(item.equals("println")){
             setTextField(1, argTypeList.get("println"));
         }else if(item.equals("text")){
             setTextField(3, argTypeList.get("text"));
+            setTextFieldContents(argValueList.get("text"));
         }else if(item.equals("textSize")){
             setTextField(1, argTypeList.get("textSize"));
+            setTextFieldContents(argValueList.get("textSize"));
         }else if(item.equals("line")){
             setTextField(4, argTypeList.get("line"));
+            setTextFieldContents(argValueList.get("line"));
         }else if(item.equals("noStroke")){
             setTextField(0, new Integer[0]);    //new Integer[0]は適当に埋めただけ。なぜなら第1引数が0で引数がないから
         }else if(item.equals("stroke")){
             setTextField(3, argTypeList.get("stroke"));
+            setTextFieldContents(argValueList.get("stroke"));
         }
         else {
             new Exception();
         }
+        setTextFieldPosition();
     }
     void drawShadow() {
         noStroke();
@@ -2636,7 +2668,6 @@ class ArrayAssignPlate extends Plate {
             }
             step++;
         }
-
     }
     void setGUIPosition(){
         textFont(font);

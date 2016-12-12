@@ -5,16 +5,17 @@ void setup() {
     int vy = 1;
 }
 void draw() {
-    rect(x, y, 300, 200);
+    int r = 100;
+    ellipse(x, y, r, r);
     x = x+vx;
     y = y+vy;
     if ( x < 0 ) {
         vx = -1*vx;
     }
-    if ( y > 650 ) {
+    if ( y > height) {
         vy = -1*vy;
     }
-    if ( x > 600 ) {
+    if ( x > width) {
         vx = -1*vx;
     }
     if ( y < 0 ) {

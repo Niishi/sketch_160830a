@@ -23,9 +23,9 @@ import processing.sound.*;
 */
 SoundFile errorSound, dumpSound, correctSound, putSound, nextStepSound, openWindowSound;
 
-ArrayList<Plate> plateList = new ArrayList<Plate>();
-ArrayList<WallPlate> wallPlateList = new ArrayList<WallPlate>();
-ArrayList<Method> methodList = new ArrayList<Method>();
+ArrayList<Plate> plateList          = new ArrayList<Plate>();
+ArrayList<WallPlate> wallPlateList  = new ArrayList<WallPlate>();
+ArrayList<Method> methodList        = new ArrayList<Method>();
 
 ArrayList<Tile> allBlocks = new ArrayList<Tile>();    //ブロックの情報を保持する場所
 
@@ -43,7 +43,7 @@ VariableTable variableTable;
 Plate executingPlate;
 WallPlate executingWallPlate;
 int gradationR = 0;
-boolean isDebugMode = true;
+boolean isDebugMode = false;
 ArrayList<Plate> allPlateForDebugmode = new ArrayList<Plate>();
 ArrayList<MethodPlate> methodPlateList = new ArrayList<MethodPlate>();
 int debugIndex = 0;
@@ -57,6 +57,7 @@ int counter = -1;
 int step = 0;
 boolean hasExecuteEnd = false;
 boolean canSetupExecute = true;
+boolean isFillExisted = false;
 ArrayList<MyButton> buttonList = new ArrayList<MyButton>();
 
 LogicalOpePlate logi;
@@ -83,17 +84,18 @@ void setup(){
     changeTileToScript();
 
     initArgTypeList();
+    initArgValueList();
     colorDict.put(Enum.INT, #F3AFA9);  //#FADDDA
     colorDict.put(Enum.STRING, #B9EECF);   //#E6F9EE
     colorDict.put(Enum.BOOLEAN, #69B0DD);   //#E6F1F9
 
     executingPlate = setupPlate;
 
-    logi = new LogicalOpePlate(200,200);
-    plateList.add(logi);
-    mpp = new MousePressedPlate(300,200);
-    plateList.add(mpp);
-    wallPlateList.add(mpp);
+    // logi = new LogicalOpePlate(200,200);
+    // plateList.add(logi);
+    // mpp = new MousePressedPlate(300,200);
+    // plateList.add(mpp);
+    // wallPlateList.add(mpp);
     isChange =true;
 
 }
@@ -172,27 +174,7 @@ void draw( ) {
     textAlign(LEFT,TOP);
     text(Math.round(frameRate) + "fps",40,10);
 
-    // if(!hasError){
-        if(canSetupExecute){
-            fill(255);
-            stroke(0);
-            strokeWeight(1);
-            variableTable.init();
-            step = 0;
-            hasExecuteEnd = false;
-            setupPlate.execute();
-            if(drawPlate != null){
-                canSetupExecute = false;
-            }
-        }else{
-            fill(255);
-            stroke(0);
-
-            step = 0;
-            if(drawPlate != null)drawPlate.execute();
-            else canSetupExecute = true;
-        }
-    // }
+    executePlate();
 
     drawEditor();
     drawPlate();
@@ -210,7 +192,30 @@ void draw( ) {
         allPlateForDebugmode = new ArrayList<Plate>();
         isChange = false;
     }
+
     }   //superhackermode
+}
+void executePlate(){
+    // if(!hasError){
+        if(canSetupExecute){
+            fill(255);
+            stroke(0);
+            strokeWeight(1);
+            variableTable.init();
+            step = 0;
+            isFillExisted = false;
+            hasExecuteEnd = false;
+            setupPlate.execute();
+            if(drawPlate != null) canSetupExecute = false;
+        }else{
+            fill(255);
+            stroke(0);
+
+            step = 0;
+            if(drawPlate != null)drawPlate.execute();
+            else canSetupExecute = true;
+        }
+    // }
 }
 boolean isOK = true;
 void changeTileToScript(){
@@ -294,16 +299,17 @@ void keyPressed(KeyEvent e){
                 if(counter > -1) counter--;
             }
         }
-        if(key == 'f'){
-            plateList.add(new ConditionPlate(100,100));
-            isChange = true;
-        }else if(key == 'd'){
-            plateList.add(new LogicalOpePlate(100,100));
-            isChange = true;
-        }
+        // if(key == 'f'){
+        //     plateList.add(new ConditionPlate(100,100));
+        //     isChange = true;
+        // }else if(key == 'd'){
+        //     plateList.add(new LogicalOpePlate(100,100));
+        //     isChange = true;
+        // }
 
     }
     if (e.isControlDown() && e.getKeyCode() == java.awt.event.KeyEvent.VK_P){     //プログラムの実行
+        selectedGUI = null;
         balloonList = new ArrayList<Balloon>();
         drawPlate = null;
         new Lang(editor.getTokens()).run();
@@ -345,7 +351,9 @@ boolean isOut(Plate p){
 Tile selectedBlock;
 Plate selectedPlate;
 int selectingTime = 0;
+int mousePressedTime = 0;
 final int SELECTED_TIME = 8;
+final int GUI_SELECTED_MAX_TIME = 8;
 void mousePressed() {
     for(int i = 0; i < plateList.size(); i++){
         Plate plate = plateList.get(i);
@@ -355,7 +363,7 @@ void mousePressed() {
         }
     }
     for(Balloon b : balloonList){
-        if(b.isMouseOver()) b.putForward();
+        if(b.isMouseOver()) balloonList.remove(b);
         break;
     }
     for(MyGUI gui : guiList){
@@ -383,6 +391,7 @@ void mouseDragged(){
         int addY = mouseY - pmouseY;
         selectedBlock.move(addX, addY);
     }
+    mousePressedTime++;
 }
 void mouseReleased() {
     if(selectedPlate != null){
@@ -426,6 +435,7 @@ void mouseReleased() {
         if(nearestPlate != null) {
             if(selectedPlate.upperPlate != nearestPlate){
                 selectedPlate.combineWallPlate(nearestPlate);
+                if(nearestPlate == setupPlate) canSetupExecute = true;
             }
             selectedPlate.goIntoWallPlate(nearestPlate);
         }
@@ -433,6 +443,7 @@ void mouseReleased() {
         if(isTrashBoxNear()){
             dumpSound.play();
             deletePlate(selectedPlate);
+            selectedGUI = null;
             hadPlate = null;
         }else {
             if(selectingTime > SELECTED_TIME){
@@ -444,6 +455,7 @@ void mouseReleased() {
     selectedPlate = null;
     selectedBlock = null;
     selectingTime = 0;
+    mousePressedTime = 0;
 }
 void mouseWheel(MouseEvent e){
     editor.mouseWheel(e);
@@ -463,34 +475,34 @@ boolean isTrashBoxNear(){
 }
 void buttonAction(){
     if(statementButton.isOver) {
-        String[] arg = {"100","100","300","200"};
-        plateList.add(new StatementPlate("rect", 100,100, arg));
+        String[] arg = {"300","100","300","200"};
+        plateList.add(new StatementPlate("rect", 200,100, arg));
         isChange = true;
     }else if(variableButton.isOver){
-        plateList.add(new DeclPlate(Enum.INT,100,100,"x","0"));
+        plateList.add(new DeclPlate(Enum.INT,200,100,"x","0"));
         isChange = true;
     }else if(whileButton.isOver){
-        WhilePlate wp = new WhilePlate(100, 100);
+        WhilePlate wp = new WhilePlate(200, 100);
         plateList.add(wp);
         wallPlateList.add(wp);
         isChange = true;
     }else if(ifButton.isOver){
-        IfCondPlate fp = new IfCondPlate(100,100);
+        IfCondPlate fp = new IfCondPlate(200,100);
         plateList.add(fp);
         wallPlateList.add(fp);
         isChange = true;
     }else if(forButton.isOver){
-        ForPlate l = new ForPlate(100,100);
+        ForPlate l = new ForPlate(200,100);
         wallPlateList.add(l);
         plateList.add(l);
         isChange = true;
     }else if(methodButton.isOver){
-        MethodPlate mp = new MethodPlate(100,100);
+        MethodPlate mp = new MethodPlate(200,100);
         plateList.add(mp);
         wallPlateList.add(mp);
         isChange = true;
     }else if(arrayButton.isOver){
-        ArrayPlate_Original ap = new ArrayPlate_Original(100,100,"a","10",Enum.INT_ARRAY);
+        ArrayPlate_Original ap = new ArrayPlate_Original(200, 100, "a", "10",Enum.INT_ARRAY);
         plateList.add(ap);
         isChange = true;
     }
