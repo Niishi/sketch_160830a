@@ -480,6 +480,8 @@ class MyTextField extends MyGUI {
             hasError = false;
             return true;
         }catch(Exception e){
+            balloonList.remove(balloon);
+            balloon = new Balloon("Type is not correct.\n You must input int", this);
             hasError = true;
             return false;
         }

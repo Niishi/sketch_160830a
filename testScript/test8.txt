@@ -1,0 +1,12 @@
+void setup() {
+    int y = height/2;
+}
+void draw() {
+    background(0, 0, 0);
+    stroke(255, 255, 255);
+    line(0, y, width, y);
+    y = y-2;
+    if ( y < 0 ) {
+        y = height;
+    }
+}

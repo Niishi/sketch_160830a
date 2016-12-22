@@ -4,22 +4,30 @@ import processing.sound.*;
 /*
 思いついたこと一覧
 ・コメントのタイル実装を行う
-・変数一覧を作成しそこから視覚的表現へ用いれるようにする
-・変数タイルの作成(変数名は選択式に)
-・関数を定義すると自動的に新たなタイルが作られるようにする
 ・タイルの一覧表を作成する
 ・変数代入を視覚的な実行時表現であらわせるようにする(箱を作るイメージ)
-・例外処理を実装したいよね
-・マルチスレッドとかも実装したいよね
-・オブジェクト指向、やりたいよね
 ・テキストとブロックの関係づけを持っておいて(Plateクラスがテキストエディタ内の情報を持っており、かつテキストの方もPlateの情報を持っているような感じ)相互連携を図りたい。編集中にコードの提案を行えたら
-・ゴミ箱の調整
 ・制御の流れが「球」の動きによっておっていけると良いかなぁ
-・for文のブロックのデザインをどうしようか
+・ミニチュア化
+・持っているブロックをテキストの方でもハイライト
 */
 /*
 既知のバグ
 ・WallPlate内でStatementPlate一個分以上離すとリンクがキャンセルされる
+*/
+
+/*
+今すぐにでもできることリスト
+・ブロックを非表示にしたときは、再実行しなくてもいいようにする。
+・折りたたみブロックの生成
+・構文エラーがある場合にエラーの場所を指摘する
+*/
+
+/*
+願望リスト
+・例外処理を実装したいよね
+・マルチスレッドとかも実装したいよね
+・オブジェクト指向、やりたいよね
 */
 SoundFile errorSound, dumpSound, correctSound, putSound, nextStepSound, openWindowSound;
 
@@ -43,25 +51,29 @@ VariableTable variableTable;
 Plate executingPlate;
 WallPlate executingWallPlate;
 int gradationR = 0;
-boolean isDebugMode = false;
-ArrayList<Plate> allPlateForDebugmode = new ArrayList<Plate>();
-ArrayList<MethodPlate> methodPlateList = new ArrayList<MethodPlate>();
-int debugIndex = 0;
-
-HashMap<Integer,Integer> colorDict = new HashMap<Integer,Integer>();
-boolean hasError = false;
-
-boolean isSuperHackerMode = false;
-
 int counter = -1;
 int step = 0;
-boolean hasExecuteEnd = false;
-boolean canSetupExecute = true;
-boolean isFillExisted = false;
+int debugIndex = 0;
+boolean isChange = false;
+ArrayList<Plate> allPlateForDebugmode = new ArrayList<Plate>();
+ArrayList<MethodPlate> methodPlateList = new ArrayList<MethodPlate>();
+
+HashMap<Integer,Integer> colorDict = new HashMap<Integer,Integer>();
+
+boolean hasError            = false;
+boolean isDebugMode         = false;
+boolean hasExecuteEnd       = false;
+boolean canSetupExecute     = true;     //setupメソッドを実行するかどうか
+boolean isFillExisted       = false;    //fillメソッドが存在するかどうか
+boolean isTileConversion    = true;     //タイルを表示させるかどうか
+boolean canShowTile         = true;     //視覚的表現を出すかどうか
+boolean isSuperHackerMode   = false;
+
 ArrayList<MyButton> buttonList = new ArrayList<MyButton>();
 
 LogicalOpePlate logi;
 MousePressedPlate mpp;
+PApplet instance;
 void setup(){
     size(1800,900);
     RESULT_WINDOW_WIDTH  = width / 2;
@@ -86,10 +98,13 @@ void setup(){
     initArgTypeList();
     initArgValueList();
     colorDict.put(Enum.INT, #F3AFA9);  //#FADDDA
+    colorDict.put(Enum.FLOAT, #F3AF09);  //#FADDDA
     colorDict.put(Enum.STRING, #B9EECF);   //#E6F9EE
     colorDict.put(Enum.BOOLEAN, #69B0DD);   //#E6F1F9
 
     executingPlate = setupPlate;
+
+    instance = this;
 
     // logi = new LogicalOpePlate(200,200);
     // plateList.add(logi);
@@ -164,20 +179,20 @@ void initButton(){
 }
 
 int stmPos = 0;
-boolean isChange = false;
+
 void draw( ) {
     if(isSuperHackerMode){
         shmDraw();
     }else{
-    background(255);
+    if(canShowTile) background(255);
     textSize(20);
     textAlign(LEFT,TOP);
-    text(Math.round(frameRate) + "fps",40,10);
+    // text(Math.round(frameRate) + "fps",40,10);
 
     executePlate();
 
     drawEditor();
-    drawPlate();
+    if(canShowTile) drawPlate();
     drawUI();
 
     updateInitialTileArrangement();
@@ -186,6 +201,7 @@ void draw( ) {
         changeTileToScript();
         if(editor.isLiveProgramming){
             isOK = false;
+            selectedGUI = null;
             new Lang(editor.getTokens()).run();
             isOK = true;
         }
@@ -198,9 +214,10 @@ void draw( ) {
 void executePlate(){
     // if(!hasError){
         if(canSetupExecute){
+            // background(255);
             fill(255);
             stroke(0);
-            strokeWeight(1);
+            strokeWeight(2);
             variableTable.init();
             step = 0;
             isFillExisted = false;
@@ -242,7 +259,6 @@ void drawPlate() {
     if(hadPlate != null){
         hadPlate.draw();
     }
-
     //持っているプレートだけは最前面に出すために最後に描画する
     if(selectedPlate != null){
         selectingTime++;
@@ -306,7 +322,6 @@ void keyPressed(KeyEvent e){
         //     plateList.add(new LogicalOpePlate(100,100));
         //     isChange = true;
         // }
-
     }
     if (e.isControlDown() && e.getKeyCode() == java.awt.event.KeyEvent.VK_P){     //プログラムの実行
         selectedGUI = null;
@@ -379,6 +394,20 @@ void mousePressed() {
     }
     editor.mousePressed();
     buttonAction();
+
+    if(mouseButton == RIGHT){
+        for(WallPlate wp : wallPlateList){
+            if(wp.isMouseOver()){
+                if(!wp.isMiniature){
+                    wp.miniature();
+                    selectedGUI = null;
+                }else{
+                    wp.unminiature();
+                }
+                break;
+            }
+        }
+    }
 }
 void mouseDragged(){
     editor.mouseDragged();
@@ -476,7 +505,7 @@ boolean isTrashBoxNear(){
 void buttonAction(){
     if(statementButton.isOver) {
         String[] arg = {"300","100","300","200"};
-        plateList.add(new StatementPlate("rect", 200,100, arg));
+        plateList.add(new StatementPlate("rect0", 200,100, arg));
         isChange = true;
     }else if(variableButton.isOver){
         plateList.add(new DeclPlate(Enum.INT,200,100,"x","0"));

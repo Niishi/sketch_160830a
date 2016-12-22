@@ -1,7 +1,6 @@
 ArrayList<Statement> statementList;
 int stmCount = -1;
 boolean isExecutable = false;
-boolean isTileConversion = true;
 
 int[] initialTileArrangement = {300,300};
 int[] currentTileArrangement = {100,100};
@@ -172,18 +171,8 @@ public class Lang {
             }while (next.kind == Enum.COMMA);
         }else if(next.kind == Enum.ASSIGN){
             next = getNextToken();
-            String result = "";
-            while(true){
-                if(next.kind == Enum.SEMI){
-                    break;
-                }
-                result += next.word;
-                try{
-                    next = getNextToken();
-                }catch(Exception e){
-                    throw e;
-                }
-            }
+            String result = E();
+
             String[] argString = new String[2];
             argString[0] = name;
             argString[1] = result;
