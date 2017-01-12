@@ -85,7 +85,7 @@ class MyTextEditor {
     private color backgroundColorLight = color(245);
 
     int elapsedTimeFromKeyPressed = -1;
-    final int DURATION = 100;
+    int duration = 100;
 
     boolean isLiveProgramming = false;
     MyTextEditor(int x, int y, int w, int h, int textSize){
@@ -165,7 +165,7 @@ class MyTextEditor {
                 }
             }
         }
-        if(isLiveProgramming && elapsedTimeFromKeyPressed != -1 &&  millis() - elapsedTimeFromKeyPressed > DURATION){
+        if(isLiveProgramming && elapsedTimeFromKeyPressed != -1 &&  millis() - elapsedTimeFromKeyPressed > duration){
             new LoadTextEditorThread(this).run();
             elapsedTimeFromKeyPressed = -1;
         }

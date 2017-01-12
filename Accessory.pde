@@ -207,11 +207,7 @@ class VariableTable {
             return "String";
         }else if(type == Enum.INT_ARRAY){
             return "int[]";
-        }
-        else if(type == Enum.STRING_ARRAY){
-            return "String[]";
-        }
-        else {
+        }else {
             return "undefined";
         }
     }

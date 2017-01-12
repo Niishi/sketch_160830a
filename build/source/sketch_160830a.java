@@ -24,30 +24,22 @@ public class sketch_160830a extends PApplet {
 /*
 \u601d\u3044\u3064\u3044\u305f\u3053\u3068\u4e00\u89a7
 \u30fb\u30b3\u30e1\u30f3\u30c8\u306e\u30bf\u30a4\u30eb\u5b9f\u88c5\u3092\u884c\u3046
+\u30fb\u5909\u6570\u4e00\u89a7\u3092\u4f5c\u6210\u3057\u305d\u3053\u304b\u3089\u8996\u899a\u7684\u8868\u73fe\u3078\u7528\u3044\u308c\u308b\u3088\u3046\u306b\u3059\u308b
+\u30fb\u5909\u6570\u30bf\u30a4\u30eb\u306e\u4f5c\u6210(\u5909\u6570\u540d\u306f\u9078\u629e\u5f0f\u306b)
+\u30fb\u95a2\u6570\u3092\u5b9a\u7fa9\u3059\u308b\u3068\u81ea\u52d5\u7684\u306b\u65b0\u305f\u306a\u30bf\u30a4\u30eb\u304c\u4f5c\u3089\u308c\u308b\u3088\u3046\u306b\u3059\u308b
 \u30fb\u30bf\u30a4\u30eb\u306e\u4e00\u89a7\u8868\u3092\u4f5c\u6210\u3059\u308b
 \u30fb\u5909\u6570\u4ee3\u5165\u3092\u8996\u899a\u7684\u306a\u5b9f\u884c\u6642\u8868\u73fe\u3067\u3042\u3089\u308f\u305b\u308b\u3088\u3046\u306b\u3059\u308b(\u7bb1\u3092\u4f5c\u308b\u30a4\u30e1\u30fc\u30b8)
+\u30fb\u4f8b\u5916\u51e6\u7406\u3092\u5b9f\u88c5\u3057\u305f\u3044\u3088\u306d
+\u30fb\u30de\u30eb\u30c1\u30b9\u30ec\u30c3\u30c9\u3068\u304b\u3082\u5b9f\u88c5\u3057\u305f\u3044\u3088\u306d
+\u30fb\u30aa\u30d6\u30b8\u30a7\u30af\u30c8\u6307\u5411\u3001\u3084\u308a\u305f\u3044\u3088\u306d
 \u30fb\u30c6\u30ad\u30b9\u30c8\u3068\u30d6\u30ed\u30c3\u30af\u306e\u95a2\u4fc2\u3065\u3051\u3092\u6301\u3063\u3066\u304a\u3044\u3066(Plate\u30af\u30e9\u30b9\u304c\u30c6\u30ad\u30b9\u30c8\u30a8\u30c7\u30a3\u30bf\u5185\u306e\u60c5\u5831\u3092\u6301\u3063\u3066\u304a\u308a\u3001\u304b\u3064\u30c6\u30ad\u30b9\u30c8\u306e\u65b9\u3082Plate\u306e\u60c5\u5831\u3092\u6301\u3063\u3066\u3044\u308b\u3088\u3046\u306a\u611f\u3058)\u76f8\u4e92\u9023\u643a\u3092\u56f3\u308a\u305f\u3044\u3002\u7de8\u96c6\u4e2d\u306b\u30b3\u30fc\u30c9\u306e\u63d0\u6848\u3092\u884c\u3048\u305f\u3089
+\u30fb\u30b4\u30df\u7bb1\u306e\u8abf\u6574
 \u30fb\u5236\u5fa1\u306e\u6d41\u308c\u304c\u300c\u7403\u300d\u306e\u52d5\u304d\u306b\u3088\u3063\u3066\u304a\u3063\u3066\u3044\u3051\u308b\u3068\u826f\u3044\u304b\u306a\u3041
-\u30fb\u30df\u30cb\u30c1\u30e5\u30a2\u5316
-\u30fb\u6301\u3063\u3066\u3044\u308b\u30d6\u30ed\u30c3\u30af\u3092\u30c6\u30ad\u30b9\u30c8\u306e\u65b9\u3067\u3082\u30cf\u30a4\u30e9\u30a4\u30c8
+\u30fbfor\u6587\u306e\u30d6\u30ed\u30c3\u30af\u306e\u30c7\u30b6\u30a4\u30f3\u3092\u3069\u3046\u3057\u3088\u3046\u304b
 */
 /*
 \u65e2\u77e5\u306e\u30d0\u30b0
 \u30fbWallPlate\u5185\u3067StatementPlate\u4e00\u500b\u5206\u4ee5\u4e0a\u96e2\u3059\u3068\u30ea\u30f3\u30af\u304c\u30ad\u30e3\u30f3\u30bb\u30eb\u3055\u308c\u308b
-*/
-
-/*
-\u4eca\u3059\u3050\u306b\u3067\u3082\u3067\u304d\u308b\u3053\u3068\u30ea\u30b9\u30c8
-\u30fb\u30d6\u30ed\u30c3\u30af\u3092\u975e\u8868\u793a\u306b\u3057\u305f\u3068\u304d\u306f\u3001\u518d\u5b9f\u884c\u3057\u306a\u304f\u3066\u3082\u3044\u3044\u3088\u3046\u306b\u3059\u308b\u3002
-\u30fb\u6298\u308a\u305f\u305f\u307f\u30d6\u30ed\u30c3\u30af\u306e\u751f\u6210
-\u30fb\u69cb\u6587\u30a8\u30e9\u30fc\u304c\u3042\u308b\u5834\u5408\u306b\u30a8\u30e9\u30fc\u306e\u5834\u6240\u3092\u6307\u6458\u3059\u308b
-*/
-
-/*
-\u9858\u671b\u30ea\u30b9\u30c8
-\u30fb\u4f8b\u5916\u51e6\u7406\u3092\u5b9f\u88c5\u3057\u305f\u3044\u3088\u306d
-\u30fb\u30de\u30eb\u30c1\u30b9\u30ec\u30c3\u30c9\u3068\u304b\u3082\u5b9f\u88c5\u3057\u305f\u3044\u3088\u306d
-\u30fb\u30aa\u30d6\u30b8\u30a7\u30af\u30c8\u6307\u5411\u3001\u3084\u308a\u305f\u3044\u3088\u306d
 */
 SoundFile errorSound, dumpSound, correctSound, putSound, nextStepSound, openWindowSound;
 
@@ -71,29 +63,25 @@ VariableTable variableTable;
 Plate executingPlate;
 WallPlate executingWallPlate;
 int gradationR = 0;
-int counter = -1;
-int step = 0;
-int debugIndex = 0;
-boolean isChange = false;
+boolean isDebugMode = false;
 ArrayList<Plate> allPlateForDebugmode = new ArrayList<Plate>();
 ArrayList<MethodPlate> methodPlateList = new ArrayList<MethodPlate>();
+int debugIndex = 0;
 
 HashMap<Integer,Integer> colorDict = new HashMap<Integer,Integer>();
+boolean hasError = false;
 
-boolean hasError            = false;
-boolean isDebugMode         = false;
-boolean hasExecuteEnd       = false;
-boolean canSetupExecute     = true;     //setup\u30e1\u30bd\u30c3\u30c9\u3092\u5b9f\u884c\u3059\u308b\u304b\u3069\u3046\u304b
-boolean isFillExisted       = false;    //fill\u30e1\u30bd\u30c3\u30c9\u304c\u5b58\u5728\u3059\u308b\u304b\u3069\u3046\u304b
-boolean isTileConversion    = true;     //\u30bf\u30a4\u30eb\u3092\u8868\u793a\u3055\u305b\u308b\u304b\u3069\u3046\u304b
-boolean canShowTile         = true;     //\u8996\u899a\u7684\u8868\u73fe\u3092\u51fa\u3059\u304b\u3069\u3046\u304b
-boolean isSuperHackerMode   = false;
+boolean isSuperHackerMode = false;
 
+int counter = -1;
+int step = 0;
+boolean hasExecuteEnd = false;
+boolean canSetupExecute = true;
+boolean isFillExisted = false;
 ArrayList<MyButton> buttonList = new ArrayList<MyButton>();
 
 LogicalOpePlate logi;
 MousePressedPlate mpp;
-PApplet instance;
 public void setup(){
     
     RESULT_WINDOW_WIDTH  = width / 2;
@@ -118,13 +106,10 @@ public void setup(){
     initArgTypeList();
     initArgValueList();
     colorDict.put(Enum.INT, 0xffF3AFA9);  //#FADDDA
-    colorDict.put(Enum.FLOAT, 0xffF3AF09);  //#FADDDA
     colorDict.put(Enum.STRING, 0xffB9EECF);   //#E6F9EE
     colorDict.put(Enum.BOOLEAN, 0xff69B0DD);   //#E6F1F9
 
     executingPlate = setupPlate;
-
-    instance = this;
 
     // logi = new LogicalOpePlate(200,200);
     // plateList.add(logi);
@@ -199,20 +184,20 @@ public void initButton(){
 }
 
 int stmPos = 0;
-
+boolean isChange = false;
 public void draw( ) {
     if(isSuperHackerMode){
         shmDraw();
     }else{
-    if(canShowTile) background(255);
+    background(255);
     textSize(20);
     textAlign(LEFT,TOP);
-    // text(Math.round(frameRate) + "fps",40,10);
+    text(Math.round(frameRate) + "fps",40,10);
 
     executePlate();
 
     drawEditor();
-    if(canShowTile) drawPlate();
+    drawPlate();
     drawUI();
 
     updateInitialTileArrangement();
@@ -221,7 +206,6 @@ public void draw( ) {
         changeTileToScript();
         if(editor.isLiveProgramming){
             isOK = false;
-            selectedGUI = null;
             new Lang(editor.getTokens()).run();
             isOK = true;
         }
@@ -234,10 +218,9 @@ public void draw( ) {
 public void executePlate(){
     // if(!hasError){
         if(canSetupExecute){
-            // background(255);
             fill(255);
             stroke(0);
-            strokeWeight(2);
+            strokeWeight(1);
             variableTable.init();
             step = 0;
             isFillExisted = false;
@@ -279,6 +262,7 @@ public void drawPlate() {
     if(hadPlate != null){
         hadPlate.draw();
     }
+
     //\u6301\u3063\u3066\u3044\u308b\u30d7\u30ec\u30fc\u30c8\u3060\u3051\u306f\u6700\u524d\u9762\u306b\u51fa\u3059\u305f\u3081\u306b\u6700\u5f8c\u306b\u63cf\u753b\u3059\u308b
     if(selectedPlate != null){
         selectingTime++;
@@ -342,6 +326,7 @@ public void keyPressed(KeyEvent e){
         //     plateList.add(new LogicalOpePlate(100,100));
         //     isChange = true;
         // }
+
     }
     if (e.isControlDown() && e.getKeyCode() == java.awt.event.KeyEvent.VK_P){     //\u30d7\u30ed\u30b0\u30e9\u30e0\u306e\u5b9f\u884c
         selectedGUI = null;
@@ -414,20 +399,6 @@ public void mousePressed() {
     }
     editor.mousePressed();
     buttonAction();
-
-    if(mouseButton == RIGHT){
-        for(WallPlate wp : wallPlateList){
-            if(wp.isMouseOver()){
-                if(!wp.isMiniature){
-                    wp.miniature();
-                    selectedGUI = null;
-                }else{
-                    wp.unminiature();
-                }
-                break;
-            }
-        }
-    }
 }
 public void mouseDragged(){
     editor.mouseDragged();
@@ -525,7 +496,7 @@ public boolean isTrashBoxNear(){
 public void buttonAction(){
     if(statementButton.isOver) {
         String[] arg = {"300","100","300","200"};
-        plateList.add(new StatementPlate("rect0", 200,100, arg));
+        plateList.add(new StatementPlate("rect", 200,100, arg));
         isChange = true;
     }else if(variableButton.isOver){
         plateList.add(new DeclPlate(Enum.INT,200,100,"x","0"));
@@ -783,11 +754,7 @@ class VariableTable {
             return "String";
         }else if(type == Enum.INT_ARRAY){
             return "int[]";
-        }
-        else if(type == Enum.STRING_ARRAY){
-            return "String[]";
-        }
-        else {
+        }else {
             return "undefined";
         }
     }
@@ -1582,8 +1549,6 @@ class MyTextField extends MyGUI {
             hasError = false;
             return true;
         }catch(Exception e){
-            balloonList.remove(balloon);
-            balloon = new Balloon("Type is not correct.\n You must input int", this);
             hasError = true;
             return false;
         }
@@ -1748,7 +1713,7 @@ class MyTextEditor {
     private int backgroundColorLight = color(245);
 
     int elapsedTimeFromKeyPressed = -1;
-    final int DURATION = 100;
+    int duration = 100;
 
     boolean isLiveProgramming = false;
     MyTextEditor(int x, int y, int w, int h, int textSize){
@@ -1828,7 +1793,7 @@ class MyTextEditor {
                 }
             }
         }
-        if(isLiveProgramming && elapsedTimeFromKeyPressed != -1 &&  millis() - elapsedTimeFromKeyPressed > DURATION){
+        if(isLiveProgramming && elapsedTimeFromKeyPressed != -1 &&  millis() - elapsedTimeFromKeyPressed > duration){
             new LoadTextEditorThread(this).run();
             elapsedTimeFromKeyPressed = -1;
         }
@@ -2852,7 +2817,6 @@ final int originalLoopHeight = 100;
 final int originalLoopWidth = 180;
 final int indentVolume = 4;
 
-float RATE = 0.2f;
 public abstract class Plate {
 
     int x, y;
@@ -2872,7 +2836,6 @@ public abstract class Plate {
     boolean isVariablePlate     = false;
     boolean isLogicalOpePlate   = false;
     boolean isDrawPlate         = false;
-    boolean isMiniature         = false;
 
     Balloon balloon;
 
@@ -2893,7 +2856,7 @@ public abstract class Plate {
         return false;
     }
     public boolean isPlateBelow(Plate plate) {     //\u5f15\u6570\u306b\u6e21\u3057\u305fplate\u304c\u81ea\u5206\u306e\u4e0b\u306b\u3044\u308b\u304b\u3069\u3046\u304b
-        if ((!plate.isMiniature && !this.isMiniature) && abs(y + pHeight - plate.y) <= marginY && abs(x - plate.x) <= marginX) {
+        if (abs(y + pHeight - plate.y) <= marginY && abs(x - plate.x) <= marginX) {
             return true;
         }
         // else if(plate.upperPlate != null && plate.upperPlate == this.upperPlate && y + pHeight - plate.y <= 0  && abs(x - plate.x) <= marginX){
@@ -3008,18 +2971,8 @@ public abstract class Plate {
     public void moveTo(int x, int y){
         this.x = x; this.y = y;
     }
-    public void miniature(){
-        isMiniature = true;
-        pWidth      = PApplet.parseInt(pWidth * RATE);
-        pHeight     = PApplet.parseInt(pHeight * RATE);
-    }
-    public void unminiature(){
-        isMiniature = false;
-        pWidth      = PApplet.parseInt(pWidth/RATE);
-        pHeight     = PApplet.parseInt(pHeight/RATE);
-    }
 }
-public int getValue(String text, MyTextField gui){
+public int getValue(String text, MyGUI gui){
     try{
         return new Lang(editor.getTokens(text)).getValue();
     }catch(UndefinedVariableException e){
@@ -3049,9 +3002,6 @@ public int getValue(String text, MyTextField gui){
         hasError = true;
         return 0;
     }
-}
-public int getValue(MyTextField gui){
-    return getValue(gui.getText(), gui);
 }
 public String getStringValue(MyTextField txf){
     try{
@@ -3178,32 +3128,7 @@ public abstract class WallPlate extends Plate {
         }
         return maxWidth;
     }
-    public void miniature(){
-        super.miniature();
-        wallPlateWidth          = PApplet.parseInt(wallPlateWidth * RATE);
-        wallPlateHeight         = PApplet.parseInt(wallPlateHeight * RATE);
-        wallPlateHeightBottom   = PApplet.parseInt(wallPlateHeightBottom * RATE);
-        int x = this.x + wallPlateWidth;
-        int y = this.y + wallPlateHeight;
-        for(Plate plate : loopOpes){
-            plate.moveTo(x,y);
-            plate.miniature();
-            y += plate.pHeight;
-        }
-    }
-    public void unminiature(){
-        super.unminiature();
-        wallPlateWidth = PApplet.parseInt(wallPlateWidth / RATE);
-        wallPlateHeight         = PApplet.parseInt(wallPlateHeight / RATE);
-        wallPlateHeightBottom   = PApplet.parseInt(wallPlateHeightBottom / RATE);
-        int x = this.x + wallPlateWidth;
-        int y = this.y + wallPlateHeight;
-        for(Plate plate : loopOpes){
-            plate.moveTo(x,y);
-            plate.unminiature();
-            y += plate.pHeight;
-        }
-    }
+
 }
 public abstract class FuncPlate extends Plate {
     ArrayList<Plate> plates = new ArrayList<Plate>();
@@ -3215,71 +3140,23 @@ public abstract class FuncPlate extends Plate {
 
 int originalStatementWidth = 20;
 
-HashMap<String, int[]> argTypeList;
-StringList methodNameList = new StringList();
+HashMap<String, Integer[]> argTypeList;
 public void initArgTypeList(){
-    argTypeList = new HashMap<String, int[]>();
-    // Integer[] a = {Enum.INT, Enum.INT, Enum.INT, Enum.INT};
-    // argTypeList.put("rect", a);
-    // argTypeList.put("ellipse", a);
-    // argTypeList.put("line", a);
-    // Integer[] b = {Enum.INT, Enum.INT, Enum.INT};
-    // argTypeList.put("fill", b);
-    // argTypeList.put("background", b);
-    // argTypeList.put("stroke", b);
-    // Integer[] c = {Enum.STRING};
-    // argTypeList.put("println", c);
-    // Integer[] d = {Enum.INT};
-    // argTypeList.put("textSize", d);
-    // Integer[] e = {Enum.STRING, Enum.INT, Enum.INT};
-    // argTypeList.put("text", e);
-
-    BufferedReader reader = createReader("methodList.txt");
-    String line;
-    int id = 0;
-    while(true){
-        try{
-            line = reader.readLine();
-            if(line == null) break;
-            String[] aaa = line.split(":");
-            String name = aaa[0];
-            if(aaa.length > 1){
-                String[] bbb = aaa[1].split(",");
-                IntList typeList = new IntList();
-                boolean isOK = true;
-                for(String typeWord : bbb){
-                    if(typeWord.equals("java.lang.String")) typeWord = "String";
-                    int type = editor.getToken(typeWord);
-                    if(type == Enum.OTHER){
-                        isOK = false;
-                        break;
-                    }
-                    typeList.append(type);
-                }
-                if(isOK){
-                    if(argTypeList.containsKey(name)){
-                        id++;
-                    }
-                    else{
-                        id = 0;
-                    }
-                    name = name + id;
-                    argTypeList.put(name, typeList.array());
-                    methodNameList.append(name);
-                }
-            }else{
-                argTypeList.put(name, new int[0]);
-                methodNameList.append(name);
-            }
-        }catch(IOException e){
-            println("no");
-        }
-    }
-    try{
-        reader.close();
-    }catch(IOException e){
-        println(e.getMessage());
-    }
+    argTypeList = new HashMap<String, Integer[]>();
+    Integer[] a = {Enum.INT, Enum.INT, Enum.INT, Enum.INT};
+    argTypeList.put("rect", a);
+    argTypeList.put("ellipse", a);
+    argTypeList.put("line", a);
+    Integer[] b = {Enum.INT, Enum.INT, Enum.INT};
+    argTypeList.put("fill", b);
+    argTypeList.put("background", b);
+    argTypeList.put("stroke", b);
+    Integer[] c = {Enum.STRING};
+    argTypeList.put("println", c);
+    Integer[] d = {Enum.INT};
+    argTypeList.put("textSize", d);
+    Integer[] e = {Enum.STRING, Enum.INT, Enum.INT};
+    argTypeList.put("text", e);
 }
 HashMap<String, String[]> argValueList;
 public void initArgValueList(){
@@ -3309,7 +3186,7 @@ class StatementPlate extends Plate {
         String[] stmItems = {
             "rect", "ellipse", "fill", "background", "noStroke", "stroke", "line",  "println", "text", "textSize"
         };
-        comboBox = new MyComboBox(methodNameList.array(), x + comboBoxX, y + 5, 70, 20);
+        comboBox = new MyComboBox(stmItems, x + comboBoxX, y + 5, 70, 20);
         comboBox.setItem(methodName);
         comboBoxWidth = comboBox.getWidth();
         pWidth += comboBoxWidth;
@@ -3326,7 +3203,7 @@ class StatementPlate extends Plate {
         String[] stmItems = {
             "rect", "ellipse", "line", "background", "stroke", "noStroke", "fill",  "println", "text", "textSize"
         };
-        comboBox = new MyComboBox(methodNameList.array(), x + 10, y +5, 70, 20);
+        comboBox = new MyComboBox(stmItems, x + 10, y +5, 70, 20);
         changeArraySizeByComboBox();
     }
     String val = "";
@@ -3349,12 +3226,11 @@ class StatementPlate extends Plate {
         }
         fill(fillColor);
         rect(x, y, pWidth, pHeight, 10);
-        if(!isMiniature){
-            comboBox.draw();
-            for(int i = 0; i < textFields.size(); i++){
-                textFields.get(i).draw();
-            }
+        comboBox.draw();
+        for(int i = 0; i < textFields.size(); i++){
+            textFields.get(i).draw();
         }
+        strokeWeight(2);
     }
     public void execute(){//\u5b9f\u884c\u90e8\u306f\u3053\u3053\u306b\u8ffd\u52a0\u3059\u308b
         String comboboxItem = comboBox.getItem();
@@ -3364,74 +3240,48 @@ class StatementPlate extends Plate {
         }
         if(!isDebugMode ||(isDebugMode && step <= counter)){
             try{
-                int[] typeList = argTypeList.get(comboboxItem);
-                Class[] a = new Class[typeList.length];
-                for(int i = 0; i < typeList.length; i++){
-                    int type = typeList[i];
-                    if(type == Enum.INT) a[i] = int.class;
-                    else if(type == Enum.FLOAT) a[i] = float.class;
-                    else if(type == Enum.STRING) a[i] = String.class;
-                    else if(type == Enum.BOOLEAN) a[i] = boolean.class;
-                    else println("kaisyaku dekinai class error() in execute() of StatementPlate");
+                if(comboboxItem.equals("rect")){
+                    if(!isFillExisted) fill(255);
+                    int[] arg = getArg(textFields.size());
+                    rect(arg[0],arg[1],arg[2],arg[3]);
+                }else if(comboboxItem.equals("ellipse")){
+                    if(!isFillExisted) fill(255);
+                    int[] arg = getArg(textFields.size());
+                    ellipse(arg[0], arg[1], arg[2], arg[3]);
+                }else if(comboboxItem.equals("fill")){
+                    isFillExisted = true;
+                    int[] arg = getArg(textFields.size());
+                    fill(arg[0], arg[1], arg[2]);
+                }else if(comboboxItem.equals("noStroke")){
+                    noStroke();
+                }else if(comboboxItem.equals("stroke")){
+                    int[] arg = getArg(textFields.size());
+                    stroke(arg[0], arg[1], arg[2]);
+                }else if(comboboxItem.equals("background")){
+                    int[] arg = getArg(textFields.size());
+                    background(arg[0], arg[1], arg[2]);
+                }else if(comboboxItem.equals("println")){
+                    int[] arg = getArg(textFields.size());
+                    println(arg[0]);
+                }else if(comboboxItem.equals("text")){
+                    if(!isFillExisted) fill(0);
+                    String text = getStringValue(textFields.get(0));
+                    int[] arg = getArg(1,2);
+                    text(text, arg[0], arg[1]);
+                }else if(comboboxItem.equals("textSize")){
+                    int[] arg = getArg(textFields.size());
+                    textSize(arg[0]);
+                }else if(comboboxItem.equals("line")){
+                    int[] arg = getArg(textFields.size());
+                    line(arg[0], arg[1], arg[2], arg[3]);
                 }
-                Object[] b = new Object[typeList.length];
-                for(int i = 0; i < typeList.length; i++){
-                    int type = typeList[i];
-                    MyTextField txf = textFields.get(i);
-                    if(type == Enum.INT) b[i] = new Integer(getValue(txf));
-                    else if(type == Enum.FLOAT) b[i] = new Float(getValue(txf));
-                    else if(type == Enum.STRING) b[i] = new String(getStringValue(txf));
-                    else if(type == Enum.BOOLEAN) println("boolean ha miteigi in execute() in StatementPlate");
-                    else println("kaisyaku dekinai class error() in execute() of StatementPlate");
-                }
-                String method = deleteLastChar(comboboxItem);
-                try{
-                    instance.getClass().getMethod(method, a).invoke(instance, b);
-                }catch(ReflectiveOperationException e){
-                    println(e.getMessage());
-                }
-                // if(comboboxItem.equals("rect")){
-                //     if(!isFillExisted) fill(255);
-                //     int[] arg = getArg(textFields.size());
-                //     rect(arg[0],arg[1],arg[2],arg[3]);
-                // }else if(comboboxItem.equals("ellipse")){
-                //     if(!isFillExisted) fill(255);
-                //     int[] arg = getArg(textFields.size());
-                //     ellipse(arg[0], arg[1], arg[2], arg[3]);
-                // }else if(comboboxItem.equals("fill")){
-                //     isFillExisted = true;
-                //     int[] arg = getArg(textFields.size());
-                //     fill(arg[0], arg[1], arg[2]);
-                // }else if(comboboxItem.equals("noStroke")){
-                //     noStroke();
-                // }else if(comboboxItem.equals("stroke")){
-                //     int[] arg = getArg(textFields.size());
-                //     stroke(arg[0], arg[1], arg[2]);
-                // }else if(comboboxItem.equals("background")){
-                //     int[] arg = getArg(textFields.size());
-                //     background(arg[0], arg[1], arg[2]);
-                // }else if(comboboxItem.equals("println")){
-                //     int[] arg = getArg(textFields.size());
-                //     println(arg[0]);
-                // }else if(comboboxItem.equals("text")){
-                //     if(!isFillExisted) fill(0);
-                //     String text = getStringValue(textFields.get(0));
-                //     int[] arg = getArg(1,2);
-                //     text(text, arg[0], arg[1]);
-                // }else if(comboboxItem.equals("textSize")){
-                //     int[] arg = getArg(textFields.size());
-                //     textSize(arg[0]);
-                // }else if(comboboxItem.equals("line")){
-                //     int[] arg = getArg(textFields.size());
-                //     line(arg[0], arg[1], arg[2], arg[3]);
-                // }
             }catch(ArrayIndexOutOfBoundsException ex){
                 println(ex.toString());
             }
             step++;
         }
     }
-    private void setTextField(int count, int[] typeKind) {
+    private void setTextField(int count, Integer[] typeKind) {
         pWidth = originalStatementWidth;
         textFields = new ArrayList<MyTextField>();
         pWidth += comboBoxWidth;
@@ -3447,13 +3297,11 @@ class StatementPlate extends Plate {
     }
     //\u3053\u306e\u30bf\u30a4\u30eb\u5168\u4f53\u306e\u4e2d\u8eab\u3092\u8a2d\u5b9a\u3059\u308b\u3068\u304d\u306b\u7528\u3044\u308b
     private void setTextFieldContents(String[] textFieldContents){
-        println(textFields.size());
         for(int i = 0; i < textFieldContents.length; i++){
             textFields.get(i).setText(textFieldContents[i]);
         }
     }
     private void setTextFieldPosition(){
-        if(isMiniature) return;
         pWidth = originalStatementWidth + comboBoxWidth;
         int txfWidth = 0;
         for(int i = 0; i < textFields.size(); i++){
@@ -3487,42 +3335,40 @@ class StatementPlate extends Plate {
         return arg;
     }
     public void changeArraySizeByComboBox(){//\u8ffd\u52a0\u3059\u308b\u3068\u304d\u306f\u3053\u3053\u3092\u7de8\u96c6\u3057\u3066\u306d
-        String name = comboBox.getItem();
-        int[] typeList = argTypeList.get(name);
-        setTextField(typeList.length, typeList);
+        String item = comboBox.getItem();
 
-        // if(item.equals("rect")){
-        //     setTextField(4, argTypeList.get("rect"));
-        //     setTextFieldContents(argValueList.get("rect"));
-        // }else if(item.equals("ellipse")){
-        //     setTextField(4,argTypeList.get("ellipse"));
-        //     setTextFieldContents(argValueList.get("ellipse"));
-        // }else if(item.equals("fill")){
-        //     setTextField(3, argTypeList.get("fill"));
-        //     setTextFieldContents(argValueList.get("fill"));
-        // }else if(item.equals("background")){
-        //     setTextField(3, argTypeList.get("background"));
-        //     setTextFieldContents(argValueList.get("background"));
-        // }else if(item.equals("println")){
-        //     setTextField(1, argTypeList.get("println"));
-        // }else if(item.equals("text")){
-        //     setTextField(3, argTypeList.get("text"));
-        //     setTextFieldContents(argValueList.get("text"));
-        // }else if(item.equals("textSize")){
-        //     setTextField(1, argTypeList.get("textSize"));
-        //     setTextFieldContents(argValueList.get("textSize"));
-        // }else if(item.equals("line")){
-        //     setTextField(4, argTypeList.get("line"));
-        //     setTextFieldContents(argValueList.get("line"));
-        // }else if(item.equals("noStroke")){
-        //     setTextField(0, new int[0]);    //new Integer[0]\u306f\u9069\u5f53\u306b\u57cb\u3081\u305f\u3060\u3051\u3002\u306a\u305c\u306a\u3089\u7b2c1\u5f15\u6570\u304c0\u3067\u5f15\u6570\u304c\u306a\u3044\u304b\u3089
-        // }else if(item.equals("stroke")){
-        //     setTextField(3, argTypeList.get("stroke"));
-        //     setTextFieldContents(argValueList.get("stroke"));
-        // }
-        // else {
-        //     new Exception();
-        // }
+        if(item.equals("rect")){
+            setTextField(4, argTypeList.get("rect"));
+            setTextFieldContents(argValueList.get("rect"));
+        }else if(item.equals("ellipse")){
+            setTextField(4,argTypeList.get("ellipse"));
+            setTextFieldContents(argValueList.get("ellipse"));
+        }else if(item.equals("fill")){
+            setTextField(3, argTypeList.get("fill"));
+            setTextFieldContents(argValueList.get("fill"));
+        }else if(item.equals("background")){
+            setTextField(3, argTypeList.get("background"));
+            setTextFieldContents(argValueList.get("background"));
+        }else if(item.equals("println")){
+            setTextField(1, argTypeList.get("println"));
+        }else if(item.equals("text")){
+            setTextField(3, argTypeList.get("text"));
+            setTextFieldContents(argValueList.get("text"));
+        }else if(item.equals("textSize")){
+            setTextField(1, argTypeList.get("textSize"));
+            setTextFieldContents(argValueList.get("textSize"));
+        }else if(item.equals("line")){
+            setTextField(4, argTypeList.get("line"));
+            setTextFieldContents(argValueList.get("line"));
+        }else if(item.equals("noStroke")){
+            setTextField(0, new Integer[0]);    //new Integer[0]\u306f\u9069\u5f53\u306b\u57cb\u3081\u305f\u3060\u3051\u3002\u306a\u305c\u306a\u3089\u7b2c1\u5f15\u6570\u304c0\u3067\u5f15\u6570\u304c\u306a\u3044\u304b\u3089
+        }else if(item.equals("stroke")){
+            setTextField(3, argTypeList.get("stroke"));
+            setTextFieldContents(argValueList.get("stroke"));
+        }
+        else {
+            new Exception();
+        }
         setTextFieldPosition();
     }
     public void drawShadow() {
@@ -3691,13 +3537,11 @@ class DeclPlate extends Plate {
         }else{
             noStroke();
         }
+        textFont(font);
         fill(fillColor);
         rect(x, y, pWidth, pHeight, 10);
         checkGUIChange();
-        if(!isMiniature){
-            textFont(font);
-            drawContents();
-        }
+        drawContents();
     }
     public void drawContents(){
         textAlign(LEFT,CENTER);
@@ -3721,10 +3565,16 @@ class DeclPlate extends Plate {
         boolean txfChange = false;
         if(variableNameTxf.checkChanged() || valueTxf.checkChanged()) txfChange = true;
         if(typeBox.checkChanged()){
-            lshType = getType();
-            fillColor = getColorByToken(lshType);
-            valueTxf.setFillColor(colorDict.get(lshType));
-            valueTxf.setKind(lshType);
+            int type = 0;
+            String item = typeBox.getItem();
+            if(item.equals("int")){
+                type = Enum.INT;
+            }else if(item.equals("String")){
+                type = Enum.STRING;
+            }else if(item.equals("boolean")){
+                type = Enum.BOOLEAN;
+            }
+            fillColor = getColorByToken(type);
             txfChange = true;
         }
         if(txfChange){
@@ -3742,7 +3592,7 @@ class DeclPlate extends Plate {
         tmpx += variableNameTxf.getWidth() + TXF_INTERVAL + equalWidth + TXF_INTERVAL;
         valueTxf.moveTo(tmpx, y + txfPosY);
         tmpx += valueTxf.getWidth() + TXF_INTERVAL;
-        if(!isMiniature) pWidth = tmpx - x;
+        pWidth = tmpx - x;
     }
     public void shiftPosition(int addX, int addY){
         x += addX;
@@ -3780,8 +3630,6 @@ class DeclPlate extends Plate {
             result.append("int ");
         }else if(lshType == Enum.STRING){
             result.append("String ");
-        }else if(lshType == Enum.BOOLEAN){
-            result.append("boolean ");
         }
         result.append(variableNameTxf.getText() + " = " + valueTxf.getText() + ";\n");
         return result.toString();
@@ -3796,7 +3644,7 @@ class DeclPlate extends Plate {
         result.append(variableNameTxf.getText() + " = " + valueTxf.getText() + ";");
         return result.toString();
     }
-    public void mouseClicked(MouseEvent e){
+    public void mouseClicked(MouseEvent e) {
         if (isMouseOver() && e.getClickCount() >= 2) {  //\u30c0\u30d6\u30eb\u30af\u30ea\u30c3\u30af\u306e\u5224\u5b9a\u3092\u884c\u3046
             plateList.add(new AssignmentPlate(this, x + pWidth + MARGIN, y + pHeight + MARGIN));
             // plateList.add(new VariablePlate(x + pWidth +  MARGIN, y + pHeight + MARGIN, variableNameTxf.getText(), lshType));
@@ -3862,6 +3710,7 @@ class AssignmentPlate extends Plate {
                 try{
                     updateVariableValue(name, content);
                 }catch(UndefinedVariableException e){
+                    println("eeee");
                     balloon = new Balloon("UndefinedVariableException:\n" + name, x + MARGIN, y + MARGIN, x + pWidth/2, y + pHeight/2);
                     hasError = true;
                     return;
@@ -3872,6 +3721,7 @@ class AssignmentPlate extends Plate {
                 try{
                     updateVariableValue(name, content);
                 }catch(UndefinedVariableException e){
+                    println("ffff");
                     balloon = new Balloon("UndefinedVariableException:\n" + name, x + MARGIN, y + MARGIN, x + pWidth/2, y + pHeight/2);
                     hasError = true;
                     return;
@@ -3891,10 +3741,8 @@ class AssignmentPlate extends Plate {
         textFont(font);
         fill(fillColor);
         rect(x, y, pWidth, pHeight, 10);
-        if(!isMiniature){
-            checkGUIChange();
-            drawContents();
-        }
+        checkGUIChange();
+        drawContents();
     }
     public void drawContents(){
         textAlign(LEFT,CENTER);
@@ -3932,7 +3780,7 @@ class AssignmentPlate extends Plate {
         int tmpx = x + TXF_INTERVAL + PApplet.parseInt(textWidth(name)) + TXF_INTERVAL + equalWidth + TXF_INTERVAL;
         valueTxf.moveTo(tmpx, y + txfPosY);
         tmpx += valueTxf.getWidth() + TXF_INTERVAL;
-        if(!isMiniature) pWidth = tmpx - x;
+        pWidth = tmpx - x;
     }
     public void shiftPosition(int addX, int addY){
         x += addX;
@@ -3997,18 +3845,17 @@ class ForPlate extends WallPlate{
         noStroke();
         if(executingPlate == this) setBorder();
         fill(fillColor);
+
         rect(x, y, pWidth, wallPlateHeight, 10);
         rect(x, y, wallPlateWidth, pHeight, 10);
         rect(x, y+pHeight - wallPlateHeightBottom, pWidth, wallPlateHeightBottom, 10);
-        if(!isMiniature){
-            fill(0);
-            textAlign(LEFT,TOP);
-            textFont(font);
-            text("for", x + MARGIN, y + MARGIN);
-            firstPlate.draw();
-            lastPlate.draw();
-            cond.draw();
-        }
+        fill(0);
+        textAlign(LEFT,TOP);
+        textFont(font);
+        text("for", x + MARGIN, y + MARGIN);
+        firstPlate.draw();
+        lastPlate.draw();
+        cond.draw();
     }
     public void drawShadow(){
         noStroke();
@@ -4025,6 +3872,7 @@ class ForPlate extends WallPlate{
         }
     }
     public void drawTransparent(){
+
     }
     public void resize(int addX, int addY){
         super.resize(addX, addY);
@@ -4211,6 +4059,7 @@ class Method extends Plate {
             tmpx += arg.getWidth() + MARGIN;
             pWidth += arg.getWidth() + MARGIN;
         }
+
     }
     public String[] getArgNames() {
         String[] names = new String[args.size()];
@@ -4294,14 +4143,13 @@ class SetupPlate extends WallPlate {
             rect(x+2, y+2, wallPlateWidth-2, pHeight-4, 10);
             rect(x+2, y+pHeight-wallPlateHeight+2, pWidth-4, wallPlateHeight-2, 10);
         }
-        if(!isMiniature){
-            stroke(0);
-            fill(0);
-            textSize(18);
-            textFont(font);
-            textAlign(LEFT,TOP);
-            text("setup", x+10, y+5);
-        }
+        stroke(0);
+        fill(0);
+        textSize(18);
+        textFont(font);
+        textAlign(LEFT,TOP);
+        text("setup", x+10, y+5);
+
     }
     public void drawShadow(){
         noStroke();
@@ -4355,7 +4203,6 @@ class MethodPlate extends WallPlate {
     MyTextField methodNameTxf;
     MyButton addVarButton;
     MyButton removeVarButton;
-    ArrayList<Integer> types    = new ArrayList<Integer>();
     ArrayList<MyTextField> args = new ArrayList<MyTextField>();
     private int txfInterval     = 10;
     private int comboBoxWidth   = 0;
@@ -4398,27 +4245,6 @@ class MethodPlate extends WallPlate {
         }
         setTextFieldPosition();
         isWallPlate = true;
-    }
-    public void execute(ArrayList<MyTextField> argumentList){
-        for(int i = 0; i < args.size(); i++){
-            String name = args.get(i).getText();
-            int type = types.get(i);
-            MyTextField valueTxf = argumentList.get(i);
-            String content = "";
-            if(type == Enum.INT){
-                int value = getValue(valueTxf.getText(), valueTxf);
-                content = "" + value;
-                variableTable.addVariable(new Variable(type, name, value, content));
-            }else if(type == Enum.STRING){
-                String value = getStringValue(valueTxf);
-                content = value;
-                variableTable.addVariable(new Variable(type, name, value, content));
-            }else if(type == Enum.BOOLEAN){
-
-            }else{
-                println("Type is not defined. in MethodPlate execute()");
-            }
-        }
     }
     public void execute(){
         if(!loopOpes.isEmpty()){
@@ -4483,7 +4309,7 @@ class MethodPlate extends WallPlate {
         addVarButton.moveTo(x + tmp, y + 20);
         tmp += removeVarButton.getWidth() + MARGIN;
         if(tmp < originalLoopWidth) tmp = originalLoopWidth;
-        if(!isMiniature) pWidth = tmp;
+        pWidth = tmp;
     }
     private void checkGUIChange(){
         boolean txfChange = false;
@@ -4936,17 +4762,15 @@ class IfCondPlate extends WallPlate {
         rect(x, y, pWidth, 30, 10);
         rect(x, y, 30, pHeight, 10);
         rect(x, y+pHeight-30, pWidth, 30, 10);
-        if(!isMiniature){
-            stroke(0);
-            fill(0);
-            textSize(18);
-            textAlign(LEFT,TOP);
-            text("if", x+10, y+5);
-            cond.draw();
-            cond.state = -1;
-            updateByCondPlateWidth();
-            updateWidth();
-        }
+        stroke(0);
+        fill(0);
+        textSize(18);
+        textAlign(LEFT,TOP);
+        text("if", x+10, y+5);
+        cond.draw();
+        cond.state = -1;
+        updateByCondPlateWidth();
+        updateWidth();
     }
     private void setConditionPlate(ConditionPlate cp){
         cond = cp;
@@ -5635,6 +5459,7 @@ class ArrayAssignPlate extends Plate {
             try{
                 array = (CompositeVariable)(fetchVariableByName(name));
             }catch(UndefinedVariableException e){
+                println("ggg");
                 balloon = new Balloon("UndefinedVariableException:\n" + name, x + MARGIN, y + MARGIN, x + pWidth/2, y + pHeight/2);
                 hasError = true;
                 return;
@@ -5988,6 +5813,7 @@ class MousePressedPlate extends WallPlate{
 ArrayList<Statement> statementList;
 int stmCount = -1;
 boolean isExecutable = false;
+boolean isTileConversion = true;
 
 int[] initialTileArrangement = {300,300};
 int[] currentTileArrangement = {100,100};
@@ -6158,8 +5984,18 @@ public class Lang {
             }while (next.kind == Enum.COMMA);
         }else if(next.kind == Enum.ASSIGN){
             next = getNextToken();
-            String result = E();
-
+            String result = "";
+            while(true){
+                if(next.kind == Enum.SEMI){
+                    break;
+                }
+                result += next.word;
+                try{
+                    next = getNextToken();
+                }catch(Exception e){
+                    throw e;
+                }
+            }
             String[] argString = new String[2];
             argString[0] = name;
             argString[1] = result;
